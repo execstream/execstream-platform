@@ -1,7 +1,7 @@
 import {
   deleteCloudinaryImage,
   uploadBase64Image,
-} from "../configs/cloudinary.helpers.js";
+} from "../helpers/cloudinary.helpers.js";
 import Contributor from "../models/Contributor.js";
 import ContributorEmployment from "../models/ContributorEmployment.js";
 
@@ -38,7 +38,7 @@ export const create = async (req, res) => {
   console.log("Creating new contributor");
   try {
     const data = { ...req.body };
-    console.log("Received data for update:", {
+    console.log("Received data for creation:", {
       ...data,
       photo_base64: data.photo_base64 ? "[BASE64_DATA]" : undefined,
     });
@@ -77,7 +77,7 @@ export const create = async (req, res) => {
       updated_at: new Date(),
     });
     await contributor.save();
-    console.log("Created new contributor");
+    console.log("Created new contributor: ", contributor._id);
     res.status(201).json({ message: "Contributor created", contributor });
   } catch (err) {
     console.error("Error creating contributor:", err);

@@ -7,7 +7,7 @@ import { fileURLToPath } from "url";
 // import nodemailer from "nodemailer";
 import Otp from "../models/Otp.js";
 import { sendEmail } from "../configs/sendgrid.js";
-import { generateToken } from "../configs/utils.js";
+import { generateToken } from "../utils/generateToken.js";
 import dotenv from "dotenv";
 dotenv.config();
 

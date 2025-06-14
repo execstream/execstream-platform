@@ -4,7 +4,7 @@ import ContributorEmployment from "../models/ContributorEmployment.js";
 import {
   deleteCloudinaryImage,
   uploadBase64Image,
-} from "../configs/cloudinary.helpers.js";
+} from "../helpers/cloudinary.helpers.js";
 
 const allowedSortFields = ["updated_at", "created_at", "publish_date"];
 const allowedSortOrders = ["asc", "desc"];
