@@ -61,3 +61,29 @@ export const deleteCloudinaryImage = async (imageUrl, context = "") => {
     throw new Error(`Failed to delete ${context} image`);
   }
 };
+
+export const replaceImage = async ({
+  base64,
+  oldUrl,
+  folder,
+  label,
+  skipDelete = false,
+}) => {
+  try {
+    const imageUrl = await uploadBase64Image(base64, folder, label);
+    // console.log(`Image uploaded successfully: ${imageUrl}`);
+
+    if (!skipDelete && oldUrl) {
+      try {
+        await deleteCloudinaryImage(oldUrl, label);
+        // console.log(`Old image deleted successfully: ${oldUrl}`);
+      } catch (err) {
+        console.warn(`Failed to delete old image: ${err.message}`);
+      }
+    }
+
+    return imageUrl;
+  } catch (err) {
+    throw new Error("Failed to replace image: " + err.message);
+  }
+};

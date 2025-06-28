@@ -34,7 +34,6 @@ const contentSchema = new mongoose.Schema({
   featured: { type: Boolean, default: false },
   popular: { type: Boolean, default: false },
   hero: { type: Boolean, default: false },
-
   theme_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Theme" }],
   industry_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Industry" }],
   exec_role_ids: [
@@ -48,12 +47,41 @@ const contentSchema = new mongoose.Schema({
         required: true,
       },
       role: { type: String },
+      name: { type: String },
+      email: { type: String },
+      bio: { type: String },
+      profile_image_url: { type: String },
+      uploaded_by_content: { type: Boolean, default: false },
+      linkedin_url: { type: String },
+      twitter_url: { type: String },
+      website_url: { type: String },
+      employment: {
+        company_name: { type: String },
+        job_position: { type: String },
+        description: { type: String },
+        company_logo_url: { type: String },
+        company_logo_uploaded_by_content: { type: Boolean, default: false }
+      },
     },
   ],
   created_by: { type: String },
   updated_by: { type: String },
   created_at: { type: Date },
   updated_at: { type: Date },
+});
+
+contentSchema.index({ status: 1, publish_date: -1 });
+contentSchema.index({ content_type: 1, status: 1 });
+contentSchema.index({ featured: 1, status: 1 });
+contentSchema.index({ popular: 1, status: 1 });
+contentSchema.index({ hero: 1, status: 1 });
+contentSchema.index({ created_at: -1 });
+contentSchema.index({ updated_at: -1 });
+contentSchema.index({
+  title: "text",
+  slug: "text",
+  body: "text",
+  ai_summary: "text",
 });
 
 export default mongoose.model("Content", contentSchema);

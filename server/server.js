@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./configs/db.js";
@@ -18,6 +19,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cookieParser());
+app.use(compression());
 app.use(
   cors({
     origin: process.env.CLIENT_URL,

@@ -1,24 +1,18 @@
 import Content from "../models/Content.js";
 import Contributor from "../models/Contributor.js";
-import ContributorEmployment from "../models/ContributorEmployment.js";
 import {
   deleteCloudinaryImage,
+  replaceImage,
   uploadBase64Image,
 } from "../helpers/cloudinary.helpers.js";
-
-const allowedSortFields = ["updated_at", "created_at", "publish_date"];
-const allowedSortOrders = ["asc", "desc"];
-const allowedContentTypes = [
-  "article",
-  "podcast",
-  "video",
-  "interview",
-  "webinar",
-  "news",
-  "insight",
-  "report",
-  "webcast",
-];
+import mongoose from "mongoose";
+import { updateContentContributors } from "../helpers/contributor.helpers.js";
+import {
+  validateContentType,
+  validateRequiredString,
+  validateSortField,
+  validateSortOrder,
+} from "../utils/validators.js";
 
 export const listAll = async (req, res) => {
   console.log("Fetching paginated content list");
@@ -33,7 +27,7 @@ export const listAll = async (req, res) => {
     } = req.query;
 
     const pageNum = Number(page);
-    const limitNum = Math.min(Number(limit), 100); //max 100 content items
+    const limitNum = Math.min(Number(limit), 100);
 
     let warning = null;
     if (Number(limit) > 100) {
@@ -47,12 +41,9 @@ export const listAll = async (req, res) => {
       filter.status = "published";
     }
     if (content_type) {
-      if (!allowedContentTypes.includes(content_type)) {
-        return res.status(400).json({
-          message: `Invalid content_type. Allowed values: ${allowedContentTypes.join(
-            ", "
-          )}`,
-        });
+      const typeError = validateContentType(content_type);
+      if (typeError) {
+        return res.status(400).json({ message: typeError });
       }
       filter.content_type = content_type;
     }
@@ -67,27 +58,22 @@ export const listAll = async (req, res) => {
     }
 
     const [sortField, sortOrder] = sort.split(":");
-    if (!allowedSortFields.includes(sortField)) {
-      return res.status(400).json({
-        message: `Invalid sort field. Allowed fields: ${allowedSortFields.join(
-          ", "
-        )}`,
-      });
+    const sortFieldError = validateSortField(sortField);
+    if (sortFieldError) {
+      return res.status(400).json({ message: sortFieldError });
     }
 
-    if (!allowedSortOrders.includes(sortOrder)) {
-      return res.status(400).json({
-        message: `Invalid sort order. Allowed values: ${allowedSortOrders.join(
-          ", "
-        )}`,
-      });
+    const sortOrderError = validateSortOrder(sortOrder);
+    if (sortOrderError) {
+      return res.status(400).json({ message: sortOrderError });
     }
     const sortOptions = { [sortField]: sortOrder === "asc" ? 1 : -1 };
 
     const contents = await Content.find(filter)
       .sort(sortOptions)
       .skip((pageNum - 1) * limitNum)
-      .limit(limitNum);
+      .limit(limitNum)
+      .lean();
 
     const total = await Content.countDocuments(filter);
 
@@ -114,34 +100,10 @@ export const getById = async (req, res) => {
 
     if (!content) return res.status(404).json({ message: "Content not found" });
 
-    const publishDate = content.publish_date;
-
-    const contributorsWithEmployment = await Promise.all(
-      content.contributors.map(async ({ contributor_id, role }) => {
-        const contributor = await Contributor.findById(contributor_id).lean();
-        if (!contributor) return null;
-
-        const employment = await ContributorEmployment.findOne({
-          contributor_id,
-          start_date: { $lte: publishDate },
-          $or: [{ end_date: null }, { end_date: { $gte: publishDate } }],
-        })
-          .sort({ start_date: -1 })
-          .lean();
-
-        return {
-          ...contributor,
-          role,
-          employment: employment || null,
-        };
-      })
-    );
-
-    content.contributors = contributorsWithEmployment.filter(Boolean);
     console.log("Content fetched successfully");
     res.json({ message: "Content fetched successfully", content });
   } catch (err) {
-    console.error("Error in getContentWithContributors:", err);
+    console.error("Error in getById:", err);
     res.status(500).json({ message: "Failed to fetch content" });
   }
 };
@@ -157,22 +119,14 @@ export const createContent = async (req, res) => {
         : undefined,
     });
 
-    if (
-      !data.title ||
-      typeof data.title !== "string" ||
-      data.title.trim() === ""
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Title is required and must be a non-empty string." });
+    const titleError = validateRequiredString(data.title, "title");
+    if (titleError) {
+      return res.status(400).json({ message: titleError });
     }
 
-    if (data.content_type && !allowedContentTypes.includes(data.content_type)) {
-      return res.status(400).json({
-        message: `Invalid content_type. Allowed values: ${allowedContentTypes.join(
-          ", "
-        )}`,
-      });
+    const typeError = validateContentType(data.content_type);
+    if (typeError) {
+      return res.status(400).json({ message: typeError });
     }
 
     if (data.banner_image_base64) {
@@ -184,7 +138,6 @@ export const createContent = async (req, res) => {
         );
 
         data.banner_image_url = bannerUrl;
-
         delete data.banner_image_base64;
       } catch (uploadError) {
         console.error("Cloudinary upload error:", uploadError);
@@ -195,13 +148,16 @@ export const createContent = async (req, res) => {
       }
     }
 
-    // if (Array.isArray(data.contributors)) {
-    //   for (const { contributor_id } of data.contributors) {
-    //     const exists = await Contributor.exists({ _id: contributor_id });
-    //     if (!exists)
-    //       return res.status(400).json({ message: "Invalid contributor" });
-    //   }
-    // }
+    if (Array.isArray(data.contributors)) {
+      if (data.status === "published") {
+        data.contributors = await updateContentContributors(data.contributors);
+      } else {
+        data.contributors = data.contributors.map((c) => ({
+          contributor_id: c.contributor_id,
+          role: c.role || "",
+        }));
+      }
+    }
 
     const content = new Content({
       ...data,
@@ -239,38 +195,26 @@ export const updateContent = async (req, res) => {
         : undefined,
     });
 
-    if (
-      data.title &&
-      (typeof data.title !== "string" || data.title.trim() === "")
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Title must be a non-empty string if provided." });
+    const titleError = validateRequiredString(data.title, "title");
+    if (titleError) {
+      return res.status(400).json({ message: titleError });
     }
 
-    if (data.content_type && !allowedContentTypes.includes(data.content_type)) {
-      return res.status(400).json({
-        message: `Invalid content_type. Allowed values: ${allowedContentTypes.join(
-          ", "
-        )}`,
-      });
+    const typeError = validateContentType(data.content_type);
+    if (typeError) {
+      return res.status(400).json({ message: typeError });
     }
 
     if (data.banner_image_base64) {
       try {
-        if (content.banner_image_url) {
-          await deleteCloudinaryImage(content.banner_image_url, "Content");
-          console.log("Deleted old banner image from Cloudinary.");
-        }
-
-        const imageUrl = await uploadBase64Image(
-          data.banner_image_base64,
-          "content_banners",
-          "Content"
-        );
+        const imageUrl = await replaceImage({
+          base64: data.banner_image_base64,
+          oldUrl: content.banner_image_url,
+          folder: "content_banners",
+          label: "Content",
+        });
 
         data.banner_image_url = imageUrl;
-
         delete data.banner_image_base64;
       } catch (uploadError) {
         console.error("Cloudinary upload error:", uploadError);
@@ -281,13 +225,19 @@ export const updateContent = async (req, res) => {
       }
     }
 
-    // if (Array.isArray(data.contributors)) {
-    //   for (const { contributor_id } of data.contributors) {
-    //     const exists = await Contributor.exists({ _id: contributor_id });
-    //     if (!exists)
-    //       return res.status(400).json({ message: "Invalid contributor" });
-    //   }
-    // }
+    if (Array.isArray(data.contributors)) {
+      const isCurrentlyPublished = content.status === "published";
+      const willBePublished = data.status === "published";
+
+      if (isCurrentlyPublished || willBePublished) {
+        data.contributors = await updateContentContributors(data.contributors);
+      } else {
+        data.contributors = data.contributors.map((c) => ({
+          contributor_id: c.contributor_id,
+          role: c.role || "",
+        }));
+      }
+    }
 
     const updated = await Content.findByIdAndUpdate(
       req.params.id,
@@ -321,8 +271,6 @@ export const removeContent = async (req, res) => {
         await deleteCloudinaryImage(content.banner_image_url, "Content");
       } catch (err) {
         console.error("Warning: Failed to delete content image", err.message);
-        // Option 1: Let deletion continue anyway [for now done this]
-        // Option 2: Return failure if image deletion is critical
       }
     }
 
@@ -346,8 +294,19 @@ export const publishContent = async (req, res) => {
       return res.status(400).json({ message: "Content is already published" });
     }
 
+    const publishDate = new Date();
+
+    if (content.contributors && content.contributors.length > 0) {
+      const contributorsData = content.contributors.map((c) => ({
+        contributor_id: c.contributor_id,
+        role: c.role,
+      }));
+
+      content.contributors = await updateContentContributors(contributorsData);
+    }
+
     content.status = "published";
-    content.publish_date = new Date();
+    content.publish_date = publishDate;
     content.updated_by = req.user.id;
     content.updated_at = new Date();
 
@@ -368,13 +327,274 @@ export const publishContent = async (req, res) => {
   }
 };
 
+export const patchContributorInContent = async (req, res) => {
+  const { contentId, contributorSubId } = req.params;
+  const updates = { ...req.body };
+
+  console.log("Received data:", {
+    ...updates,
+    profile_image_base64: updates.profile_image_base64
+      ? "[BASE64_DATA]"
+      : undefined,
+    employment: {
+      ...updates.employment,
+      company_logo_base64: updates.employment?.company_logo_base64
+        ? "[BASE64_DATA]"
+        : undefined,
+    },
+  });
+
+  try {
+    const content = await Content.findOne({
+      _id: contentId,
+      "contributors._id": contributorSubId,
+    });
+
+    if (!content) {
+      return res
+        .status(404)
+        .json({ message: "Contributor not found in content" });
+    }
+
+    const contributor = content.contributors.id(contributorSubId);
+    if (!contributor) {
+      return res.status(404).json({ message: "Contributor not found" });
+    }
+
+    const editableFields = [
+      "role",
+      "name",
+      "email",
+      "bio",
+      "profile_image_url",
+      "linkedin_url",
+      "twitter_url",
+      "website_url",
+    ];
+
+    for (const key of Object.keys(updates)) {
+      if (editableFields.includes(key)) {
+        contributor[key] = updates[key];
+      }
+    }
+
+    if (updates.profile_image_base64) {
+      const imageUrl = await replaceImage({
+        base64: updates.profile_image_base64,
+        oldUrl: contributor.uploaded_by_content
+          ? contributor.profile_image_url
+          : null,
+        folder: "contributors",
+        label: "Contributor_image",
+      });
+
+      contributor.profile_image_url = imageUrl;
+      contributor.uploaded_by_content = true;
+      delete updates.profile_image_base64;
+    }
+
+    if (updates.employment && typeof updates.employment === "object") {
+      if (!contributor.employment) {
+        contributor.employment = {};
+      }
+
+      const allowedEmploymentFields = [
+        "company_name",
+        "job_position",
+        "description",
+        "company_logo_url",
+      ];
+
+      for (const field of allowedEmploymentFields) {
+        if (updates.employment[field] !== undefined) {
+          contributor.employment[field] = updates.employment[field];
+        }
+      }
+
+      if (updates.employment.company_logo_base64) {
+        const imageUrl = await replaceImage({
+          base64: updates.employment.company_logo_base64,
+          oldUrl: contributor.employment.company_logo_uploaded_by_content
+            ? contributor.employment.company_logo_url
+            : null,
+          folder: "company_logos",
+          label: "Contributor_company_logo",
+        });
+
+        contributor.employment.company_logo_url = imageUrl;
+        contributor.employment.company_logo_uploaded_by_content = true;
+
+        delete updates.employment.company_logo_base64;
+      }
+    }
+
+    content.updated_at = new Date();
+    content.updated_by = req.user.id;
+
+    await content.save();
+
+    console.log("Contributor updated successfully");
+
+    res.json({ message: "Contributor updated in content", contributor });
+  } catch (err) {
+    console.error("Error updating contributor in content:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const deleteContributorFromContent = async (req, res) => {
+  const { contentId, contributorSubId } = req.params;
+
+  console.log(
+    "Deleting contributor from content:",
+    contentId,
+    "contributorSubId:",
+    contributorSubId
+  );
+
+  try {
+    const content = await Content.findById(contentId);
+    if (!content) {
+      return res.status(404).json({ message: "Content not found" });
+    }
+
+    const contributor = content.contributors.id(contributorSubId);
+    if (!contributor) {
+      return res
+        .status(404)
+        .json({ message: "Contributor not found in content" });
+    }
+
+    if (contributor.uploaded_by_content && contributor.profile_image_url) {
+      try {
+        await deleteCloudinaryImage(
+          contributor.profile_image_url,
+          "Contributor_image"
+        );
+        // console.log("Deleted content-specific contributor image.");
+      } catch (err) {
+        console.warn("Failed to delete contributor image:", err.message);
+      }
+    }
+
+    if (
+      contributor.employment?.company_logo_uploaded_by_content &&
+      contributor.employment?.company_logo_url
+    ) {
+      try {
+        await deleteCloudinaryImage(
+          contributor.employment.company_logo_url,
+          "Contributor_company_logo"
+        );
+        // console.log("Deleted content-specific company logo.");
+      } catch (err) {
+        console.warn("Failed to delete company logo:", err.message);
+      }
+    }
+
+    contributor.deleteOne();
+    content.updated_at = new Date();
+    content.updated_by = req.user.id;
+
+    await content.save();
+
+    console.log("Contributor deleted from content successfully");
+
+    res.json({ message: "Contributor removed from content" });
+  } catch (err) {
+    console.error("Error removing contributor from content:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const addContributorToContent = async (req, res) => {
+  const { contentId } = req.params;
+  const { contributor_id, role } = req.body;
+
+  if (!contributor_id || !mongoose.Types.ObjectId.isValid(contributor_id)) {
+    return res
+      .status(400)
+      .json({ message: "Valid contributor_id is required." });
+  }
+
+  console.log("Adding contributor to content:", contentId, contributor_id);
+
+  try {
+    const content = await Content.findById(contentId);
+    if (!content) {
+      return res.status(404).json({ message: "Content not found" });
+    }
+
+    const isDuplicate = content.contributors.some(
+      (c) => c.contributor_id?.toString() === contributor_id
+    );
+    if (isDuplicate) {
+      return res
+        .status(400)
+        .json({ message: "Contributor already exists in content." });
+    }
+
+    let contributorSnapshot;
+
+    if (content.status === "published") {
+      const contributor = await Contributor.findById(contributor_id).lean();
+      if (!contributor) {
+        return res.status(404).json({ message: "Contributor not found." });
+      }
+
+      contributorSnapshot = {
+        contributor_id: contributor._id,
+        name: contributor.name,
+        email: contributor.email,
+        bio: contributor.bio,
+        profile_image_url: contributor.profile_image_url,
+        linkedin_url: contributor.linkedin_url,
+        twitter_url: contributor.twitter_url,
+        website_url: contributor.website_url,
+        employment: contributor.current_employment
+          ? {
+              company_name: contributor.current_employment.company_name,
+              job_position: contributor.current_employment.job_position,
+              description: contributor.current_employment.description,
+              company_logo_url: contributor.current_employment.company_logo_url,
+            }
+          : null,
+        role: role || "",
+      };
+    } else {
+      contributorSnapshot = {
+        contributor_id,
+        role: role || "",
+      };
+    }
+
+    content.contributors.push(contributorSnapshot);
+    content.updated_at = new Date();
+    content.updated_by = req.user.id;
+
+    await content.save();
+
+    console.log("Contributor added to content:", contributorSnapshot);
+
+    res.json({
+      message: "Contributor added to content",
+      contributor: contributorSnapshot,
+    });
+  } catch (err) {
+    console.error("Error adding contributor to content:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const getFlaggedContent = async (req, res) => {
   console.log("Fetching flagged content (featured, popular, hero)");
   try {
     const contents = await Content.find({
       $or: [{ featured: true }, { popular: true }, { hero: true }],
       status: "published",
-    }).sort({ updated_at: -1 });
+    })
+      .sort({ updated_at: -1 })
+      .lean();
 
     console.log(`Found ${contents.length} flagged contents`);
     res.json({
@@ -391,6 +611,7 @@ export const toggleFlag = async (req, res) => {
   const { id, flag } = req.params;
   const validFlags = ["featured", "popular", "hero"];
   console.log(`Toggling ${flag} for content with ID:`, id);
+
   if (!validFlags.includes(flag)) {
     return res
       .status(400)

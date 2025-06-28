@@ -2,7 +2,40 @@
 
 This README provides comprehensive documentation for the Executive Stream backend API, including all available routes, request/response formats, role-based access control, and data models related to content publishing, contributor management, tag handling, and newsletter operations.
 
-> _Default API running on:_ http://localhost:5000
+## 💠 Local Setup
+
+Follow these steps to run the ExecStream backend locally:
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/execstream/execstream-platform.git
+cd execstream-platform/server
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Create a `.env` file
+
+Copy the .env.example file and rename it to .env. Then, fill in the required values.
+
+```env
+cp .env.example .env
+```
+
+Update the variables in .env with your local configuration (e.g., database URI, API keys).
+
+### 4. Start the development server
+
+```bash
+npm run dev
+```
+
+Server will be running on [http://localhost:5000](http://localhost:5000) by default.
 
 ## 🚏 Base API Routes
 
@@ -12,7 +45,7 @@ This README provides comprehensive documentation for the Executive Stream backen
 | `/api/v1/content`      | Content management (CRUD, publish)         |
 | `/api/v1/newsletter`   | Newsletter subscriptions & actions         |
 | `/api/v1/tags`         | Tag management (themes, industries, roles) |
-| `/api/v1/contributors` | Contributor profiles & employment          |
+| `/api/v1/contributors` | Contributor profiles & details             |
 
 ---
 
@@ -297,7 +330,24 @@ _✅ Response:_
       "industry_ids": ["66502f11b1234567890bcdef"],
       "exec_role_ids": ["66503f22c1234567890cdef0"],
       "contributors": [
-        { "contributor_id": "66503f22c1234567890cdef0", "role": "author" }
+        {
+          "employment": {
+            "company_name": "TCS",
+            "job_position": "Innovator",
+            "description": "Nothing",
+            "company_logo_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1750340878/company_logos/clqxhkhezeffljlh2ziu.webp"
+          },
+          "contributor_id": "685405d3effd77915e72093c",
+          "role": "Co-host",
+          "name": "John Doe",
+          "email": "john@example.com",
+          "bio": "Tech strategist and keynote speaker.",
+          "profile_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1750336977/contributors/lltpfcd5f1ecvz88mnfm.webp",
+          "linkedin_url": "https://www.linkedin.com/in/john",
+          "twitter_url": "https://twitter.com/john",
+          "website_url": "https://john.com",
+          "_id": "685417fbf7eba3a485474ab3"
+        }
       ],
       "created_by": "6832af7e0466922553a3a87d",
       "created_at": "2025-05-25T09:12:50.849Z",
@@ -368,25 +418,22 @@ _✅ Response:_
     "exec_role_ids": ["6846c29d4e4a35ce8412e26d"],
     "contributors": [
       {
-        "_id": "684b6de42d2379409ade7074",
-        "name": "Suyash",
-        "bio": "Full Stack Developer and open-source enthusiast. Not really right? maybe idk",
-        "photo_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1749777538/contributors/xoekjloh9bzqyhmqbbrx.jpg",
-        "created_at": "2025-06-13T00:16:36.962Z",
-        "updated_at": "2025-06-13T01:18:50.818Z",
-        "__v": 0,
-        "role": "Author",
         "employment": {
-          "_id": "684b72454d683cb7304e83bb",
-          "contributor_id": "684b6de42d2379409ade7074",
-          "company": "Goldman Sachs",
-          "job_title": "SDE-3",
-          "start_date": "2029-05-25T00:00:00.000Z",
-          "end_date": "2032-11-20T00:00:00.000Z",
-          "createdAt": "2025-06-13T00:35:17.463Z",
-          "updatedAt": "2025-06-13T00:35:17.463Z",
-          "__v": 0
-        }
+          "company_name": "TCS",
+          "job_position": "Innovator",
+          "description": "Nothing",
+          "company_logo_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1750340878/company_logos/clqxhkhezeffljlh2ziu.webp"
+        },
+        "contributor_id": "685405d3effd77915e72093c",
+        "role": "Co-host",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "bio": "Tech strategist and keynote speaker.",
+        "profile_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1750336977/contributors/lltpfcd5f1ecvz88mnfm.webp",
+        "linkedin_url": "https://www.linkedin.com/in/john",
+        "twitter_url": "https://twitter.com/john",
+        "website_url": "https://john.com",
+        "_id": "685417fbf7eba3a485474ab3"
       }
     ],
     "created_by": "6832af7e0466922553a3a87d",
@@ -455,9 +502,22 @@ _✅ Response:_
     "exec_role_ids": ["66503f22c1234567890cdef0"],
     "contributors": [
       {
-        "contributor_id": "66503f22c1234567890cdef0",
-        "role": "author",
-        "_id": "12303f22c16474567890cdef0"
+        "employment": {
+          "company_name": "TCS",
+          "job_position": "Innovator",
+          "description": "Nothing",
+          "company_logo_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1750340878/company_logos/clqxhkhezeffljlh2ziu.webp"
+        },
+        "contributor_id": "685405d3effd77915e72093c",
+        "role": "Co-host",
+        "name": "John Doe",
+        "email": "john@example.com",
+        "bio": "Tech strategist and keynote speaker.",
+        "profile_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1750336977/contributors/lltpfcd5f1ecvz88mnfm.webp",
+        "linkedin_url": "https://www.linkedin.com/in/john",
+        "twitter_url": "https://twitter.com/john",
+        "website_url": "https://john.com",
+        "_id": "685417fbf7eba3a485474ab3"
       }
     ],
     "created_by": "6832af7e0466922553a3a87d",
@@ -512,9 +572,7 @@ _✅ Response:_
     "exec_role_ids": ["66503f22c1234567890cdef0"],
     "contributors": [
       {
-        "contributor_id": "66503f22c1234567890cdef0",
-        "role": "host",
-        "_id": "12303f22c16474567890cdef0"
+        //contributor details(all)
       }
     ],
     "created_by": "6832af7e0466922553a3a87d",
@@ -578,6 +636,78 @@ _✅ Response:_
 {
   "message": "Toggled featured for content id: 665f6e7b8c1b2a0012c3d4e5",
   "featured": true
+}
+```
+
+---
+
+### ➕ Add Contributor to Content
+
+**POST /api/v1/content/add/:contentId/contributors** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_Request Body:_
+
+```json
+{
+  "contributor_id": "66503f22c1234567890cdef0",
+  "role": "author"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Contributor added to content",
+  "contributor": {
+    //contributor details
+  }
+}
+```
+
+---
+
+### ✏ Update Contributor in Content
+
+**PATCH /api/v1/content/update/:contentId/contributors/:contributorSubId** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_Request Body:_ (fields to update for the contributor in this content only)
+
+```json
+{
+  "role": "Editor",
+  "name": "Updated Name",
+  "profile_image_base64": "data:image/png;base64,...",
+  "employment": {
+    "company_name": "New Company",
+    "job_position": "Lead",
+    "company_logo_base64": "data:image/png;base64,..."
+  }
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Contributor updated in content",
+  "contributor": {
+    //updated contributor details
+  }
+}
+```
+
+---
+
+### 🗑 Remove Contributor from Content
+
+**DELETE /api/v1/content/delete/:contentId/contributors/:contributorSubId** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_✅ Response:_
+
+```json
+{
+  "message": "Contributor removed from content"
 }
 ```
 
@@ -1047,17 +1177,29 @@ _✅ Response:_
 
 ```json
 {
-  "message": "Fetched all contributors successfully",
+  "message": "Contributors fetched successfully",
   "contributors": [
     {
-      "_id": "684b6de42d2379409ade7074",
-      "name": "Suyash",
-      "bio": "Full Stack Developer",
-      "photo_url": "https://res.cloudinary.com/.../contributors/someimage.jpg",
-      "created_at": "2025-06-13T00:16:36.962Z",
-      "updated_at": "2025-06-13T01:18:50.818Z",
+      "_id": "68600824e941a93240537545",
+      "name": "Hohohohoho",
+      "email": "hohohoo.doe@example.com",
+      "bio": "Tech speaker and open-source enthusiast.",
+      "profile_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1751124004/contributors/pho4gjgdvtbdddji6ilp.webp",
+      "linkedin_url": "https://www.linkedin.com/in/janedoe",
+      "twitter_url": "https://twitter.com/janedoe",
+      "website_url": "https://janedoe.dev",
+      "current_employment": {
+        "company_name": "TechCorp Inc.",
+        "job_position": "Senior Engineer",
+        "company_logo_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1751124005/company_logos/xthkisegg3az5kpz8ij1.webp",
+        "description": "Working on AI infrastructure."
+      },
+      "created_by": "6832af7e0466922553a3a87d",
+      "created_at": "2025-06-28T15:20:04.184Z",
+      "updated_at": "2025-06-28T15:20:04.184Z",
       "__v": 0
     }
+    //similar other docs
   ]
 }
 ```
@@ -1072,14 +1214,26 @@ _✅ Response:_
 
 ```json
 {
-  "message": "Fetched required Contributor",
+  "message": "Contributor fetched successfully",
   "contributor": {
-    "_id": "684b6de42d2379409ade7074",
-    "name": "Suyash",
-    "bio": "Full Stack Developer",
-    "photo_url": "https://res.cloudinary.com/.../contributors/someimage.jpg",
-    "created_at": "2025-06-13T00:16:36.962Z",
-    "updated_at": "2025-06-13T01:18:50.818Z"
+    "_id": "68600824e941a93240537545",
+    "name": "Hohohohoho",
+    "email": "hohohoo.doe@example.com",
+    "bio": "Tech speaker and open-source enthusiast.",
+    "profile_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1751124004/contributors/pho4gjgdvtbdddji6ilp.webp",
+    "linkedin_url": "https://www.linkedin.com/in/janedoe",
+    "twitter_url": "https://twitter.com/janedoe",
+    "website_url": "https://janedoe.dev",
+    "current_employment": {
+      "company_name": "TechCorp Inc.",
+      "job_position": "Senior Engineer",
+      "company_logo_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1751124005/company_logos/xthkisegg3az5kpz8ij1.webp",
+      "description": "Working on AI infrastructure."
+    },
+    "created_by": "6832af7e0466922553a3a87d",
+    "created_at": "2025-06-28T15:20:04.184Z",
+    "updated_at": "2025-06-28T15:20:04.184Z",
+    "__v": 0
   }
 }
 ```
@@ -1106,12 +1260,7 @@ _✅ Response:_
 {
   "message": "Contributor created",
   "contributor": {
-    "_id": "684b6de42d2379409ade7074",
-    "name": "Suyash",
-    "bio": "Full Stack Developer and Open Source Enthusiast",
-    "photo_url": "https://res.cloudinary.com/.../contributors/someimage.jpg",
-    "created_at": "2025-06-13T00:16:36.962Z",
-    "updated_at": "2025-06-13T01:18:50.818Z"
+    //all contributor details
   }
 }
 ```
@@ -1137,12 +1286,7 @@ _✅ Response:_
 {
   "message": "Contributor updated",
   "updated": {
-    "_id": "684b6de42d2379409ade7074",
-    "name": "Suyash",
-    "bio": "Senior Developer at Goldman Sachs",
-    "photo_url": "https://res.cloudinary.com/.../contributors/updated.jpg",
-    "created_at": "2025-06-13T00:16:36.962Z",
-    "updated_at": "2025-06-13T02:00:10.123Z"
+    //contributor details
   }
 }
 ```
@@ -1158,108 +1302,10 @@ _✅ Response:_
 _✅ Response:_
 
 ```json
-{ "message": "Contributor and related employment removed" }
+{ "message": "Contributor removed successfully" }
 ```
 
 ---
-
-## 🧾 Contributor Employment Management
-
-### 📄 Get Contributor Employment History
-
-**GET /api/v1/contributors/\:id/employment** 🔒👑 _Requires Authentication + Role_
-
-_✅ Response:_
-
-```json
-{
-  "message": "Found employment records",
-  "employment": [
-    {
-      "_id": "684b72454d683cb7304e83bb",
-      "contributor_id": "684b6de42d2379409ade7074",
-      "company": "Goldman Sachs",
-      "job_title": "SDE-3",
-      "start_date": "2029-05-25T00:00:00.000Z",
-      "end_date": "2032-11-20T00:00:00.000Z"
-    }
-  ]
-}
-```
-
----
-
-### ➕ Add Employment Record
-
-**POST /api/v1/contributors/\:id/employment/new** 🔒👑 _Requires Authentication + Role_
-
-_Request Body:_
-
-```json
-{
-  "company": "Goldman Sachs",
-  "job_title": "SDE-3",
-  "start_date": "2029-05-25",
-  "end_date": "2032-11-20"
-}
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "Employment added",
-  "employment": {
-    "_id": "684b72454d683cb7304e83bb",
-    "contributor_id": "684b6de42d2379409ade7074",
-    "company": "Goldman Sachs",
-    "job_title": "SDE-3",
-    "start_date": "2029-05-25T00:00:00.000Z",
-    "end_date": "2032-11-20T00:00:00.000Z"
-  }
-}
-```
-
----
-
-### ✏ Update Employment Record
-
-**PATCH /api/v1/contributors/employment/update/\:employmentId** 🔒👑 _Requires Authentication + Role_
-
-_Request Body:_ (fields to update)
-
-```json
-{
-  "job_title": "Staff Engineer"
-}
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "Employment updated",
-  "employment": {
-    "_id": "684b72454d683cb7304e83bb",
-    "company": "Goldman Sachs",
-    "job_title": "Staff Engineer",
-    "start_date": "2029-05-25T00:00:00.000Z",
-    "end_date": "2032-11-20T00:00:00.000Z"
-  }
-}
-```
-
----
-
-### 🗑 Delete Employment Record
-
-**DELETE /api/v1/contributors/employment/delete/\:employmentId** 🔒👑 _Requires Authentication + Role_
-
-_✅ Response:_
-
-```json
-{ "message": "Employment deleted" }
-```
 
 ## ⚠ Error Responses
 
@@ -1360,6 +1406,9 @@ Routes use middleware in this order:
 - DELETE /api/v1/content/delete/:id
 - PATCH /api/v1/content/publish/:id
 - PATCH /api/v1/content/:id/toggle/:flag
+- POST /api/v1/content/add/:contentId/contributors
+- PATCH /api/v1/content/update/:contentId/contributors/:contributorSubId
+- DELETE /api/v1/content/delete/:contentId/contributors/:contributorSubId
 - GET /api/v1/tags/themes/all
 - POST /api/v1/tags/themes/new
 - PUT /api/v1/tags/themes/update/:id
@@ -1377,10 +1426,6 @@ Routes use middleware in this order:
 - POST /api/v1/contributors/new
 - PATCH /api/v1/contributors/update/:id
 - DELETE /api/v1/contributors/delete/:id
-- GET /api/v1/contributors/:id/employment
-- POST /api/v1/contributors/:id/employment/new
-- PATCH /api/v1/contributors/employment/update/:employmentId
-- DELETE /api/v1/contributors/employment/delete/:employmentId
 
 ### Newsletter Admin Endpoints
 

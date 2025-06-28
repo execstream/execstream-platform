@@ -20,4 +20,17 @@ router.delete("/delete/:id", ContentController.removeContent);
 router.patch("/publish/:id", ContentController.publishContent);
 router.patch("/:id/toggle/:flag", ContentController.toggleFlag);
 
+router.post(
+  "/add/:contentId/contributors",
+  ContentController.addContributorToContent
+);
+router.patch(
+  "/update/:contentId/contributors/:contributorSubId",
+  ContentController.patchContributorInContent
+);
+router.delete(
+  "/delete/:contentId/contributors/:contributorSubId",
+  ContentController.deleteContributorFromContent
+);
+
 export default router;
