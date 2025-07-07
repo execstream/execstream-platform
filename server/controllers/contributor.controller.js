@@ -120,8 +120,8 @@ export const create = async (req, res) => {
     const contributor = new Contributor({
       ...data,
       created_by: req.user.id,
-      created_at: new Date(),
-      updated_at: new Date(),
+      // created_at: new Date(),
+      // updated_at: new Date(),
     });
     await contributor.save();
     console.log("Created new contributor: ", contributor._id);
@@ -213,7 +213,7 @@ export const update = async (req, res) => {
       req.params.id,
       {
         ...data,
-        updated_at: new Date(),
+        // updated_at: new Date(),
       },
       { new: true, runValidators: true }
     );

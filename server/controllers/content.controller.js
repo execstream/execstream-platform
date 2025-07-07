@@ -162,8 +162,8 @@ export const createContent = async (req, res) => {
     const content = new Content({
       ...data,
       created_by: req.user.id,
-      created_at: new Date(),
-      updated_at: new Date(),
+      // created_at: new Date(),
+      // updated_at: new Date(),
     });
 
     await content.save();
@@ -244,7 +244,7 @@ export const updateContent = async (req, res) => {
       {
         ...data,
         updated_by: req.user.id,
-        updated_at: new Date(),
+        // updated_at: new Date(),
       },
       { new: true, runValidators: true }
     );
@@ -308,7 +308,7 @@ export const publishContent = async (req, res) => {
     content.status = "published";
     content.publish_date = publishDate;
     content.updated_by = req.user.id;
-    content.updated_at = new Date();
+    // content.updated_at = new Date();
 
     await content.save();
     console.log("Content published successfully:", content._id);
@@ -428,7 +428,7 @@ export const patchContributorInContent = async (req, res) => {
       }
     }
 
-    content.updated_at = new Date();
+    // content.updated_at = new Date();
     content.updated_by = req.user.id;
 
     await content.save();
@@ -493,7 +493,7 @@ export const deleteContributorFromContent = async (req, res) => {
     }
 
     contributor.deleteOne();
-    content.updated_at = new Date();
+    // content.updated_at = new Date();
     content.updated_by = req.user.id;
 
     await content.save();
@@ -569,7 +569,7 @@ export const addContributorToContent = async (req, res) => {
     }
 
     content.contributors.push(contributorSnapshot);
-    content.updated_at = new Date();
+    // content.updated_at = new Date();
     content.updated_by = req.user.id;
 
     await content.save();
@@ -624,7 +624,7 @@ export const toggleFlag = async (req, res) => {
 
     content[flag] = !content[flag];
     content.updated_by = req.user.id;
-    content.updated_at = new Date();
+    // content.updated_at = new Date();
     await content.save();
 
     console.log(

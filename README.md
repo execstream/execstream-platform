@@ -939,8 +939,8 @@ _✅ Response:_
       "_id": "6832c3716ef334374315ef68",
       "name": "Leadership",
       "description": "Leadership topics",
-      "createdAt": "2025-05-25T07:14:57.140Z",
-      "updatedAt": "2025-05-25T17:05:35.568Z",
+      "created_at": "2025-05-25T07:14:57.140Z",
+      "updated_at": "2025-05-25T17:05:35.568Z",
       "__v": 0
     }
   ]
@@ -971,8 +971,8 @@ _✅ Response:_
     "_id": "6832c3716ef334374315ef68",
     "name": "Leadership",
     "description": "Leadership topics",
-    "createdAt": "2025-05-25T07:14:57.140Z",
-    "updatedAt": "2025-05-25T17:05:35.568Z",
+    "created_at": "2025-05-25T07:14:57.140Z",
+    "updated_at": "2025-05-25T17:05:35.568Z",
     "__v": 0
   }
 }
@@ -1002,8 +1002,8 @@ _✅ Response:_
     "_id": "6832c3716ef334374315ef68",
     "name": "Updated Leadership",
     "description": "Updated leadership topics",
-    "createdAt": "2025-05-25T07:14:57.140Z",
-    "updatedAt": "2025-05-25T17:05:35.568Z",
+    "created_at": "2025-05-25T07:14:57.140Z",
+    "updated_at": "2025-05-25T17:05:35.568Z",
     "__v": 0
   }
 }
@@ -1041,8 +1041,8 @@ _✅ Response:_
       "_id": "6832c3716ef334374315ef68",
       "name": "Finance",
       "description": "Finance industry",
-      "createdAt": "2025-05-25T07:14:57.140Z",
-      "updatedAt": "2025-05-25T17:05:35.568Z",
+      "created_at": "2025-05-25T07:14:57.140Z",
+      "updated_at": "2025-05-25T17:05:35.568Z",
       "__v": 0
     }
   ]
@@ -1111,8 +1111,8 @@ _✅ Response:_
       "_id": "6832c3716ef334374315ef68",
       "name": "CEO",
       "description": "Chief Executive Officer",
-      "createdAt": "2025-05-25T07:14:57.140Z",
-      "updatedAt": "2025-05-25T17:05:35.568Z",
+      "created_at": "2025-05-25T07:14:57.140Z",
+      "updated_at": "2025-05-25T17:05:35.568Z",
       "__v": 0
     }
   ]

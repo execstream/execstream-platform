@@ -295,7 +295,7 @@ export const resetPassword = async (req, res) => {
     admin.password = await bcrypt.hash(new_password, 10);
     admin.resetPasswordToken = undefined;
     admin.resetPasswordExpires = undefined;
-    admin.updated_at = new Date();
+    // admin.updated_at = new Date();
     await admin.save();
 
     const supportUrl = "http://localhost:5173/contact-us";
@@ -329,7 +329,7 @@ export const resetPassword = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  console.log("Logging out user ID:", req.user?.id || "unknown");
+  console.log("Logging out user ID:", req.user.id);
   try {
     await Admin.findByIdAndUpdate(req.user.id, { last_logout: new Date() });
 

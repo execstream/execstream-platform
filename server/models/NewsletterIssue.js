@@ -1,26 +1,32 @@
 import mongoose from "mongoose";
 
-const newsletterIssueSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  summary: { type: String },
-  scheduled_for: { type: Date, required: true },
-  sent: { type: Boolean, default: false },
-  content_blocks: [
-    {
-      content_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Content",
-        required: true,
+const newsletterIssueSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    summary: { type: String },
+    scheduled_for: { type: Date, required: true },
+    sent: { type: Boolean, default: false },
+    content_blocks: [
+      {
+        content_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Content",
+          required: true,
+        },
+        category: { type: String, required: true },
+        link: { type: String, required: true },
+        related_content_title: { type: String },
+        related_content_link: { type: String },
       },
-      category: { type: String, required: true },
-      link: { type: String, required: true },
-      related_content_title: { type: String },
-      related_content_link: { type: String },
+    ],
+  },
+  {
+    timestamps: {
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     },
-  ],
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now },
-});
+  }
+);
 newsletterIssueSchema.path("content_blocks").validate(function (blocks) {
   for (const block of blocks) {
     const hasTitle = !!block.related_content_title;

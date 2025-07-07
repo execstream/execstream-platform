@@ -11,7 +11,12 @@ const otpSchema = new mongoose.Schema(
       index: { expires: 0 },
     },
   },
-  { timestamps: true }
+  {
+    timestamps: {
+      createdAt: "created_at",
+      updatedAt: "updated_at",
+    },
+  }
 );
 
 otpSchema.pre("save", async function (next) {
