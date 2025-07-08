@@ -69,11 +69,17 @@ _✅ Response:_
 ```json
 {
   "message": "Login successful",
-  "user": {
-    "id": "6832af8f90cabe9ec0da46a3",
-    "name": "Robin",
-    "email": "suyashpandey607@gmail.com",
-    "role": "editor"
+  "admin": {
+    "_id": "6832af7e0466922553a3a87d",
+    "name": "Suyash Pandey",
+    "email": "suyashpandey310@gmail.com",
+    "role": "superAdmin",
+    "created_at": "2025-05-25T05:49:50.130Z",
+    "updated_at": "2025-07-07T23:08:55.948Z",
+    "__v": 0,
+    "last_login": "2025-07-07T23:08:55.947Z",
+    "last_logout": "2025-07-07T23:06:40.741Z",
+    "provider": "local"
   }
 }
 ```
@@ -101,11 +107,17 @@ _✅ Response:_
 ```json
 {
   "message": "Admin registered successfully",
-  "user": {
-    "_id": "665f6e7b8c1b2a0012c3d4e5",
-    "name": "New User",
-    "email": "newuser@example.com",
-    "role": "user"
+  "admin": {
+    "_id": "6832af7e0466922553a3a87d",
+    "name": "Suyash Pandey",
+    "email": "suyashpandey310@gmail.com",
+    "role": "superAdmin",
+    "created_at": "2025-05-25T05:49:50.130Z",
+    "updated_at": "2025-07-07T23:08:55.948Z",
+    "__v": 0,
+    "last_login": "2025-07-07T23:08:55.947Z",
+    "last_logout": "2025-07-07T23:06:40.741Z",
+    "provider": "local"
   }
 }
 ```
@@ -211,10 +223,11 @@ _✅ Response:_
   "email": "suyashpandey310@gmail.com",
   "role": "superAdmin",
   "created_at": "2025-05-25T05:49:50.130Z",
-  "updated_at": "2025-05-25T05:49:50.130Z",
+  "updated_at": "2025-07-07T23:08:55.948Z",
   "__v": 0,
-  "last_login": "2025-05-25T15:53:06.467Z",
-  "last_logout": "2025-05-25T07:31:27.773Z"
+  "last_login": "2025-07-07T23:08:55.947Z",
+  "last_logout": "2025-07-07T23:06:40.741Z",
+  "provider": "local"
 }
 ```
 
@@ -327,6 +340,7 @@ _✅ Response:_
       "popular": true,
       "hero": false,
       "theme_ids": ["66501f00a1234567890abcde"],
+      "sub_theme_ids": ["66501f00a1234567890abcde"],
       "industry_ids": ["66502f11b1234567890bcdef"],
       "exec_role_ids": ["66503f22c1234567890cdef0"],
       "contributors": [
@@ -414,6 +428,7 @@ _✅ Response:_
     "popular": false,
     "hero": false,
     "theme_ids": ["6846c0c84302387c99fb9aee", "6846c1fbf16c092538b91022"],
+    "sub_theme_ids": ["66501f00a1234567890abcde"],
     "industry_ids": ["6846c2524e4a35ce8412e261"],
     "exec_role_ids": ["6846c29d4e4a35ce8412e26d"],
     "contributors": [
@@ -471,6 +486,7 @@ _Request Body:_
   "popular": false,
   "hero": true,
   "theme_ids": ["66501f00a1234567890abcde"],
+  "sub_theme_ids": ["66501f00a1234567890abcde"],
   "industry_ids": ["66502f11b1234567890bcdef"],
   "exec_role_ids": ["66503f22c1234567890cdef0"],
   "contributors": [
@@ -498,6 +514,7 @@ _✅ Response:_
     "popular": true,
     "hero": true,
     "theme_ids": ["66501f00a1234567890abcde"],
+    "sub_theme_ids": ["66501f00a1234567890abcde"],
     "industry_ids": ["66502f11b1234567890bcdef"],
     "exec_role_ids": ["66503f22c1234567890cdef0"],
     "contributors": [
@@ -568,6 +585,7 @@ _✅ Response:_
     "popular": true,
     "hero": false,
     "theme_ids": ["66501f00a1234567890abcde"],
+    "sub_theme_ids": ["66501f00a1234567890abcde"],
     "industry_ids": ["66502f11b1234567890bcdef"],
     "exec_role_ids": ["66503f22c1234567890cdef0"],
     "contributors": [
@@ -933,7 +951,7 @@ _✅ Response:_
 
 ```json
 {
-  "message": "Themes fetched successfully",
+  "message": "All Theme fetched successfully",
   "themes": [
     {
       "_id": "6832c3716ef334374315ef68",
@@ -1020,6 +1038,108 @@ _✅ Response:_
 ```json
 {
   "message": "Theme deleted successfully"
+}
+```
+
+---
+
+### 🧩 SubThemes
+
+**GET /api/v1/tags/sub-themes/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_Headers:_ Cookie with token
+
+_✅ Response:_
+
+```json
+{
+  "message": "All SubTheme fetched successfully",
+  "themes": [
+    {
+      "_id": "6832c3716ef334374315ef68",
+      "name": "Leadership",
+      "description": "Leadership topics",
+      "created_at": "2025-05-25T07:14:57.140Z",
+      "updated_at": "2025-05-25T17:05:35.568Z",
+      "__v": 0
+    }
+  ]
+}
+```
+
+---
+
+**POST /api/v1/tags/sub-themes/new** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_Headers:_ Cookie with token
+
+_Request Body:_
+
+```json
+{
+  "name": "Leadership",
+  "description": "Leadership topics"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "SubTheme created successfully",
+  "item": {
+    "_id": "6832c3716ef334374315ef68",
+    "name": "Leadership",
+    "description": "Leadership topics",
+    "created_at": "2025-05-25T07:14:57.140Z",
+    "updated_at": "2025-05-25T17:05:35.568Z",
+    "__v": 0
+  }
+}
+```
+
+---
+
+**PUT /api/v1/tags/sub-themes/update/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_Headers:_ Cookie with token
+
+_Request Body:_
+
+```json
+{
+  "name": "Updated Leadership",
+  "description": "Updated leadership topics"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "SubTheme updated successfully",
+  "item": {
+    "_id": "6832c3716ef334374315ef68",
+    "name": "Updated Leadership",
+    "description": "Updated leadership topics",
+    "created_at": "2025-05-25T07:14:57.140Z",
+    "updated_at": "2025-05-25T17:05:35.568Z",
+    "__v": 0
+  }
+}
+```
+
+---
+
+**DELETE /api/v1/tags/sub-themes/delete/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_Headers:_ Cookie with token
+
+_✅ Response:_
+
+```json
+{
+  "message": "SubTheme deleted successfully"
 }
 ```
 
@@ -1413,6 +1533,10 @@ Routes use middleware in this order:
 - POST /api/v1/tags/themes/new
 - PUT /api/v1/tags/themes/update/:id
 - DELETE /api/v1/tags/themes/delete/:id
+- GET /api/v1/tags/sub-themes/all
+- POST /api/v1/tags/sub-themes/new
+- PUT /api/v1/tags/sub-themes/update/:id
+- DELETE /api/v1/tags/sub-themes/delete/:id
 - GET /api/v1/tags/industries/all
 - POST /api/v1/tags/industries/new
 - PUT /api/v1/tags/industries/update/:id
