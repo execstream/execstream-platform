@@ -36,6 +36,7 @@ const contentSchema = new mongoose.Schema(
     popular: { type: Boolean, default: false },
     hero: { type: Boolean, default: false },
     theme_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Theme" }],
+    sub_theme_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "SubTheme" }],
     industry_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Industry" }],
     exec_role_ids: [
       { type: mongoose.Schema.Types.ObjectId, ref: "ExecutiveRole" },
@@ -77,6 +78,9 @@ const contentSchema = new mongoose.Schema(
 );
 
 contentSchema.index({ status: 1, publish_date: -1 });
+contentSchema.index({ theme_ids: 1, status: 1 });
+contentSchema.index({ sub_theme_ids: 1, status: 1 });
+contentSchema.index({ industry_ids: 1, status: 1 });
 contentSchema.index({ content_type: 1, status: 1 });
 contentSchema.index({ featured: 1, status: 1 });
 contentSchema.index({ popular: 1, status: 1 });

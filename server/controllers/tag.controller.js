@@ -1,6 +1,7 @@
 import Theme from "../models/Theme.js";
 import Industry from "../models/Industry.js";
 import ExecutiveRole from "../models/ExecutiveRole.js";
+import SubTheme from "../models/SubTheme.js";
 // import Content from "../models/Content.js";
 
 const createTagController = (Model, tagType) => ({
@@ -18,9 +19,11 @@ const createTagController = (Model, tagType) => ({
   create: async (req, res) => {
     console.log(`Creating new ${tagType}`, req.body);
     try {
-      if (req.body.name) {
-        req.body.name = req.body.name.toLowerCase();
+      if (!req.body.name) {
+        console.error("No name field provided.");
+        return res.status(400).json({ message: "Name field is required" });
       }
+      req.body.name = req.body.name.toLowerCase();
       console.log(`${tagType} name:`, req.body.name);
 
       const item = new Model(req.body);
@@ -75,6 +78,7 @@ const createTagController = (Model, tagType) => ({
       const tagId = req.params.id;
       const fieldMap = {
         Theme: "theme_ids",
+        SubTheme: "sub_theme_ids",
         Industry: "industry_ids",
         "Executive Role": "exec_role_ids",
       };
@@ -104,6 +108,7 @@ const createTagController = (Model, tagType) => ({
 });
 
 export const ThemeController = createTagController(Theme, "Theme");
+export const SubThemeController = createTagController(SubTheme, "SubTheme");
 export const IndustryController = createTagController(Industry, "Industry");
 export const ExecRoleController = createTagController(
   ExecutiveRole,

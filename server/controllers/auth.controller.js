@@ -21,6 +21,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 //   },
 // });
 
+const sanitizeAdmin = (adminDoc) => {
+  const obj = adminDoc.toObject();
+  delete obj.password;
+  return obj;
+};
+
 export const register = async (req, res) => {
   console.log("Registration attempt:", req.body);
   if (
@@ -81,12 +87,7 @@ export const register = async (req, res) => {
 
     res.status(201).json({
       message: "Admin registered successfully.",
-      user: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-      },
+      admin: sanitizeAdmin(admin),
     });
   } catch (err) {
     console.error("Registration error:", err);
@@ -113,12 +114,7 @@ export const login = async (req, res) => {
 
     res.json({
       message: "Login successful",
-      user: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-      },
+      admin: sanitizeAdmin(admin),
     });
   } catch (err) {
     console.error("Login error:", err);
