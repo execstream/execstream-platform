@@ -1,8 +1,20 @@
 import cron from "node-cron";
-import { sendWeeklyNewsletter } from "../controllers/newsletter.controller.js";
+import Admin from "../models/Admin.js";
 
-// Every Sunday at 10 AM
-cron.schedule("0 10 * * 0", async () => {
-  console.log("Running weekly newsletter job...");
-  await sendWeeklyNewsletter();
+
+cron.schedule("0 0 * * *", async () => {
+  const now = new Date();
+  const threshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+
+  try {
+    const result = await Admin.deleteMany({
+      isDeleted: true,
+      deletedAt: { $lte: threshold },
+    });
+    console.log(
+      `[CronJob] Deleted ${result.deletedCount} admin(s) permanently.`
+    );
+  } catch (err) {
+    console.error("[CronJobError] Failed to delete admins:", err);
+  }
 });

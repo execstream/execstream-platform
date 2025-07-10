@@ -1,13 +1,12 @@
 import sgMail from "@sendgrid/mail";
-import dotenv from "dotenv";
-dotenv.config();
+import { config } from "./env.js";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+sgMail.setApiKey(config.SENDGRID_API_KEY);
 
 export const sendEmail = async ({ to, subject, html }) => {
   const msg = {
     to,
-    from: process.env.EMAIL_USER,
+    from: config.EMAIL_USER,
     subject,
     html,
   };

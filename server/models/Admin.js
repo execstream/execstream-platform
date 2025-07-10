@@ -30,6 +30,15 @@ const adminSchema = new mongoose.Schema(
       type: Date,
       index: { expires: "10m" },
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+      index: true,
+    },
   },
   {
     timestamps: {

@@ -1,15 +1,34 @@
+import validator from "validator";
+
 export const validateRequiredString = (value, fieldName) => {
   if (typeof value !== "string" || value.trim() === "") {
-    return `${fieldName} is required and must be a non-empty string.`;
+    return `${fieldName} must be a non-empty string.`;
   }
   return null;
 };
 
 export const validateEmail = (email) => {
-  if (!email || typeof email !== "string") return null;
+  if (typeof email !== "string" || email.trim() === "") {
+    return "Email is required.";
+  }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email.trim()) ? null : "Invalid email format.";
+  const emailNormalized = email.trim().toLowerCase();
+  return validator.isEmail(emailNormalized) ? null : "Invalid email format.";
+};
+
+export const validateStrongPassword = (password) => {
+  if (
+    !validator.isStrongPassword(password, {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    })
+  ) {
+    return "Password must be at least 8 characters long and include uppercase, lowercase, number, and symbol.";
+  }
+  return null;
 };
 
 export const validateURL = (
@@ -18,10 +37,12 @@ export const validateURL = (
 ) => {
   for (const field of fields) {
     if (data[field] && data[field].trim() !== "") {
-      try {
-        new URL(data[field]);
-      } catch (error) {
-        return `Invalid ${field.replace("_", " ")} format.`;
+      const url = data[field].trim();
+      if (!validator.isURL(url, { require_protocol: true })) {
+        return `Invalid ${field.replace(
+          "_",
+          " "
+        )} format. Must include http(s)://`;
       }
     }
   }
@@ -51,6 +72,7 @@ export const validateContentType = (type) => {
 
 export const allowedSortFields = ["updated_at", "created_at", "publish_date"];
 export const allowedSortOrders = ["asc", "desc"];
+
 export const validateSortField = (field) => {
   if (!allowedSortFields.includes(field)) {
     return `Invalid sort field. Allowed fields: ${allowedSortFields.join(

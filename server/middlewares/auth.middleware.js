@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import Admin from "../models/Admin.js";
+import { config } from "../configs/env.js";
 
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
@@ -7,12 +8,12 @@ const authMiddleware = async (req, res, next) => {
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, config.JWT_SECRET);
     if (!decoded || !decoded.id) {
       console.error("Token verification failed or invalid token structure");
       return res.status(401).json({ message: "Invalid token" });
     }
-    const user = await Admin.findById(decoded.id).select("-password");
+    const user = await Admin.findOne({ _id: decoded.id, isDeleted: false }).select("-password");
     if (!user) {
       console.error("No user found with the provided token ID: ", decoded.id);
       return res.status(404).json({ message: "User not found" });
