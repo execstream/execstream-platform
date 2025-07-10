@@ -212,7 +212,12 @@ export const updateRole = async (req, res) => {
 
   console.log(`Updating role of admin with id: ${id} to role: ${role}`);
 
-  const allowedRoles = ["editor", "newsletterAdmin", "eventAdmin"];
+  const allowedRoles = [
+    "editor",
+    "newsletterAdmin",
+    "eventAdmin",
+    "superAdmin",
+  ];
 
   if (!allowedRoles.includes(role)) {
     return res.status(400).json({ message: "Invalid role" });

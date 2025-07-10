@@ -294,6 +294,212 @@ _❌ Failure:_
 
 ---
 
+### 🛠 Update Admin Profile
+
+**PUT /api/v1/auth/me/update** 🔒 _Requires Authentication_
+
+_Request Body:_
+
+```json
+{
+  "name": "Updated Name"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Profile updated successfully",
+  "admin": {
+    "_id": "6832af7e0466922553a3a87d",
+    "name": "Updated Name",
+    "email": "admin@example.com",
+    "role": "editor",
+    "provider": "local",
+    "created_at": "2025-05-25T05:49:50.130Z",
+    "updated_at": "2025-07-10T14:00:00.000Z"
+  }
+}
+```
+
+---
+
+### 📧 Request Email Change
+
+**POST /api/v1/auth/change-email/request** 🔒 _Requires Authentication_
+
+_Request Body:_
+
+```json
+{
+  "new_email": "newadmin@example.com",
+  "current_password": "oldpassword123"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "OTP sent to new email."
+}
+```
+
+---
+
+### ✅ Verify Email Change
+
+**POST /api/v1/auth/change-email/verify** 🔒 _Requires Authentication_
+
+_Request Body:_
+
+```json
+{
+  "new_email": "newadmin@example.com",
+  "otp": "123456"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Email updated successfully.",
+  "admin": {
+    "_id": "6832af7e0466922553a3a87d",
+    "name": "Admin Name",
+    "email": "newadmin@example.com",
+    "role": "editor",
+    "provider": "local",
+    "created_at": "2025-05-25T05:49:50.130Z",
+    "updated_at": "2025-07-10T14:10:00.000Z"
+  }
+}
+```
+
+---
+
+### 🔐 Change Password
+
+**PUT /api/v1/auth/change-password** 🔒 _Requires Authentication_
+
+_Request Body:_
+
+```json
+{
+  "old_password": "oldpassword123",
+  "new_password": "NewPassword@123"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Password changed successfully."
+}
+```
+
+---
+
+### 🗑 Soft Delete Admin
+
+**DELETE /api/v1/auth/\:id** 🔒👑 _Requires Authentication + Role_ (superAdmin)
+
+_Params:_ id of admin (that is to be deleted by superAdmin)
+
+_Request Body:_
+
+```json
+{
+  "password": "adminpassword123"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Admin marked for deletion. Will be permanently removed in 30 days if not reactivated."
+}
+```
+
+---
+
+### ✅ Check Authenticated User
+
+**GET /api/v1/auth/check** 🔒 _Requires Authentication_
+
+_✅ Response:_
+
+```json
+{
+  "_id": "6832af7e0466922553a3a87d",
+  "name": "Admin Name",
+  "email": "admin@example.com",
+  "role": "editor",
+  "provider": "local",
+  "created_at": "2025-05-25T05:49:50.130Z",
+  "updated_at": "2025-07-10T14:00:00.000Z"
+}
+```
+
+---
+
+### 🧑‍💼 Update Admin Role
+
+**PUT /api/v1/auth/admins/update-role/\:id** 🔒👑 _Requires Authentication + Role_ (superAdmin)
+
+_Note:_ This Route can only be accessed by **superAdmin** to update role of other admins
+
+_Request Body:_
+
+```json
+{
+  "role": "newsletterAdmin"
+}
+```
+
+_✅ Response:_
+
+```json
+{
+  "message": "Role updated",
+  "admin": {
+    "_id": "6832af7e0466922553a3a87d",
+    "name": "Admin Name",
+    "email": "admin@example.com",
+    "role": "newsletterAdmin"
+  }
+}
+```
+
+---
+
+### 📋 Get All Admins
+
+**GET /api/v1/auth/admins/all** 🔒👑 _Requires Authentication + Role_ (superAdmin)
+
+_✅ Response:_
+
+```json
+{
+  "message": "All admins fetched successfully",
+  "admins": [
+    {
+      "_id": "6832af7e0466922553a3a87d",
+      "name": "Admin Name",
+      "email": "admin@example.com",
+      "role": "superAdmin",
+      "provider": "local",
+      "created_at": "2025-05-25T05:49:50.130Z",
+      "updated_at": "2025-07-10T14:00:00.000Z"
+    }
+  ]
+}
+```
+
 ## 📄 Content Management
 
 > _Content Types:_ article | podcast | video | interview | webinar | news | insight | report | webcast
@@ -735,127 +941,14 @@ _✅ Response:_
 
 ### ➕ Add New Subscriber
 
-**POST /api/v1/newsletter/subscribers/new** 🌐 _Public_
-
-_Request Body:_
-
-```json
-{ "email": "subscriber@example.com" }
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "Subscriber added successfully.",
-  "newSubscriber": {
-    "email": "suyash123@gmail.com",
-    "unsubscribed": false,
-    "unsubscribed_at": null,
-    "_id": "683342a60a3f53b9a9ce1d15",
-    "subscribed_at": "2025-05-25T16:17:42.715Z",
-    "__v": 0
-  }
-}
-```
-
----
-
-### 🚫 Unsubscribe User
-
-**PUT /api/v1/newsletter/subscribers/:id/unsubscribe** 🌐 _Public_
-
-_✅ Response:_
-
-```json
-{
-"message": "Successfully unsubscribed.",
-"subscriber": {
-/_ updated subscriber object _/
-}
-}
-```
-
----
-
-### 📊 Get All Subscribers
-
-**GET /api/v1/newsletter/subscribers/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, newsletterAdmin)
-
-_Headers:_ Cookie with token
-
-_✅ Response:_
-
-```json
-[
-  {
-    "_id": "6832bf47fa3bccfcd142524b",
-    "email": "better.than.you893@gmail.com",
-    "unsubscribed": false,
-    "unsubscribed_at": "2025-05-25T06:59:52.018Z",
-    "subscribed_at": "2025-05-25T06:57:11.270Z",
-    "__v": 0
-  }
-]
-```
-
----
-
-### 🗑 Remove Subscriber
-
-**DELETE /api/v1/newsletter/subscribers/remove/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, newsletterAdmin)
-
-_Headers:_ Cookie with token
-
-_✅ Response:_
-
-```json
-{ "message": "Subscriber removed successfully." }
-```
-
----
-
-### 📥 Export Subscribers
-
-**GET /api/v1/newsletter/subscribers/export** 🔒👑 _Requires Authentication + Role_ (superAdmin, newsletterAdmin)
-
-_Headers:_ Cookie with token
-
-_✅ Response:_ CSV file download of all subscribers.
-
----
-
-### 📰 Create Newsletter Issue
-
-**POST /api/v1/newsletter/issue/create** 🔒👑 _Requires Authentication + Role_ (superAdmin, newsletterAdmin)
-
-_Headers:_ Cookie with token
-
-> _Note:_ related_content_title and related_content_link are optional fields for a content block. Either both of them will exist or none of them simultaneously.
+**POST /api/v1/newsletter/subscribe** 🌐 _Public_
 
 _Request Body:_
 
 ```json
 {
-  "title": "Weekly Digest",
-  "scheduled_for": "2025-06-10T10:00:00.000Z",
-  "content_blocks": [
-    {
-      "content_id": "683aec793feed4e58e433437",
-      "category": "Top Articles Of The Week",
-      "link": "https://example.com/article/big-tech-regulation",
-      "related_content_title": "The Rise of Big Tech Overlords",
-      "related_content_link": "https://example.com/article/tech-overlords",
-      "_id": "683b1772d3ab41f40cb44b35"
-    },
-    {
-      "content_id": "683aec793feed4e58e433437",
-      "category": "Top Articles Of The Week",
-      "link": "https://example.com/article/big-tech-regulation",
-      "_id": "683b1772d3ab41f40cb44b35"
-    }
-    // similar other blocks
-  ]
+  "email": "subscriber@example.com",
+  "name": "Suyash Pandey"
 }
 ```
 
@@ -863,76 +956,9 @@ _✅ Response:_
 
 ```json
 {
-  "message": "Newsletter issue created",
-  "issue": {
-    "_id": "665f6e7b8c1b2a0012c3d4e5",
-    "title": "Weekly Digest",
-    "scheduled_for": "2025-06-10T10:00:00.000Z",
-    "content_blocks": [
-      {
-        "content_id": "683aec793feed4e58e433437",
-        "category": "Top Articles Of The Week",
-        "link": "https://example.com/article/big-tech-regulation",
-        "related_content_title": "The Rise of Big Tech Overlords",
-        "related_content_link": "https://example.com/article/tech-overlords",
-        "_id": "683b1772d3ab41f40cb44b35"
-      }
-      // similar other blocks
-    ],
-    "sent": false
-  }
+  "message": "Subscriber added successfully."
+  //subscriber details
 }
-```
-
----
-
-### 📬 Get All Newsletter Issues
-
-**GET /api/v1/newsletter/issue/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, newsletterAdmin)
-
-_Headers:_ Cookie with token
-
-_✅ Response:_
-
-```json
-{
-  "message": "All weekly newsletters fetched successfully",
-  "issues": [
-    {
-      "_id": "665f6e7b8c1b2a0012c3d4e5",
-      "title": "Weekly Digest",
-      "scheduled_for": "2025-06-10T10:00:00.000Z",
-      "content_blocks": [
-        {
-          "content_id": "683aec793feed4e58e433437",
-          "category": "Top Articles Of The Week",
-          "link": "https://example.com/article/big-tech-regulation",
-          "related_content_title": "The Rise of Big Tech Overlords",
-          "related_content_link": "https://example.com/article/tech-overlords",
-          "_id": "683b1772d3ab41f40cb44b35"
-        }
-        // similar other blocks
-      ],
-      "sent": false
-    }
-  ]
-}
-```
-
----
-
-### 🧪 Send Test Newsletter
-
-**POST /api/v1/newsletter/test-newsletter** 🔒👑 _Requires Authentication + Role_ (superAdmin, newsletterAdmin)
-
-_Headers:_ Cookie with token
-
-> _Description:_ Triggers sending of the weekly newsletter (for testing).
-
-_✅ Response:_
-
-```json
-{ "message": "Test newsletter sent" }
 ```
 
 ---
@@ -1510,16 +1536,23 @@ Routes use middleware in this order:
 - GET /api/v1/auth/linkedin/callback
 - GET /api/v1/content/all (optional auth)
 - GET /api/v1/content/flags/all
-- POST /api/v1/newsletter/subscribers/new
-- PUT /api/v1/newsletter/subscribers/:id/unsubscribe
+- POST /api/v1/newsletter/subscribe
 
 ### Authentication Required
 
 - POST /api/v1/auth/logout
 - GET /api/v1/auth/me
+- PUT /api/v1/auth/me/update
+- POST /api/v1/auth/change-email/request
+- POST /api/v1/auth/change-email/verify
+- PUT /api/v1/auth/change-password
+- GET /api/v1/auth/check
 
 ### Role-Based Endpoints (superAdmin/editor)
 
+- DELETE /api/v1/auth/:id
+- PUT /api/v1/auth/admins/update-role/:id
+- GET /api/v1/auth/admins/all
 - GET /api/v1/content/get/:id
 - POST /api/v1/content/create
 - PATCH /api/v1/content/update/:id
@@ -1550,15 +1583,6 @@ Routes use middleware in this order:
 - POST /api/v1/contributors/new
 - PATCH /api/v1/contributors/update/:id
 - DELETE /api/v1/contributors/delete/:id
-
-### Newsletter Admin Endpoints
-
-- GET /api/v1/newsletter/subscribers/all
-- DELETE /api/v1/newsletter/subscribers/remove/:id
-- GET /api/v1/newsletter/subscribers/export
-- POST /api/v1/newsletter/issue/create
-- GET /api/v1/newsletter/issue/all
-- POST /api/v1/newsletter/test-newsletter
 
 ---
 
