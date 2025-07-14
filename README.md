@@ -604,11 +604,15 @@ _✅ Response:_
 }
 ```
 
----
+### 📖 Get Content by Slug
 
-### 📖 Get Single Content
+**GET /api/v1/content/slug/\:slug** 🌐 _Public_
 
-**GET /api/v1/content/get/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+> _Description:_ Fetch a single **published** content item using its unique slug (for clean, SEO-friendly URLs). Only `status: "published"` content is returned.
+
+_Params:_
+
+- `slug` (string) — Unique slug assigned to the content
 
 _✅ Response:_
 
@@ -616,27 +620,26 @@ _✅ Response:_
 {
   "message": "Content fetched successfully",
   "content": {
-    "_id": "684b88e2e249bf3744eb291b",
-    "title": "The Future of AI in Enterprise",
-    "slug": "future-of-ai-enterprise",
-    "ai_summary": "A deep dive into how AI is reshaping enterprise software and operations.",
-    "body": "<p>AI is transforming the way enterprises operate, from automation to decision-making.</p>",
-    "content_type": "article",
-    "media_url": "https://cdn.example.com/videos/future-ai.mp4",
-    "pdf_url": "https://cdn.example.com/docs/future-ai-report.pdf",
-    "media_duration_sec": 540,
-    "banner_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1749780706/content_banners/xds4waeycaoopgecgmic.webp",
-    "meta_description": "Explore the rise of AI in enterprise settings and what the future holds.",
-    "meta_keywords": "AI, enterprise, technology, future",
-    "publish_date": "2030-06-20T00:00:00.000Z",
-    "status": "scheduled",
-    "featured": true,
-    "popular": false,
+    "_id": "6832df12f2164a53de4a898a",
+    "title": "Leadership Insights from CXOs",
+    "slug": "leadership-cxos-2025",
+    "ai_summary": "Top executives share their leadership playbook for 2025.",
+    "body": "In this episode, CXOs talk about balancing innovation and people...",
+    "content_type": "podcast",
+    "media_url": "https://youtu.be/iKLwzmjfcW4?feature=shared",
+    "media_duration_sec": 1800,
+    "banner_image_url": "https://res.cloudinary.com/dsqiyp8pf/image/upload/v1748164371/content_banners/en7whdok0hxqczxhh49i.png",
+    "meta_description": "Podcast on executive leadership in modern business.",
+    "meta_keywords": "leadership, CXO, podcast",
+    "publish_date": "2025-05-25T10:13:19.323Z",
+    "status": "published",
+    "featured": false,
+    "popular": true,
     "hero": false,
-    "theme_ids": ["6846c0c84302387c99fb9aee", "6846c1fbf16c092538b91022"],
+    "theme_ids": ["66501f00a1234567890abcde"],
     "sub_theme_ids": ["66501f00a1234567890abcde"],
-    "industry_ids": ["6846c2524e4a35ce8412e261"],
-    "exec_role_ids": ["6846c29d4e4a35ce8412e26d"],
+    "industry_ids": ["66502f11b1234567890bcdef"],
+    "exec_role_ids": ["66503f22c1234567890cdef0"],
     "contributors": [
       {
         "employment": {
@@ -658,10 +661,33 @@ _✅ Response:_
       }
     ],
     "created_by": "6832af7e0466922553a3a87d",
-    "updated_by": "6832af7e0466922553a3a87d",
-    "created_at": "2025-06-13T02:11:46.436Z",
-    "updated_at": "2025-06-13T02:18:35.110Z",
-    "__v": 0
+    "created_at": "2025-05-25T09:12:50.849Z",
+    "updated_at": "2025-05-25T10:25:42.283Z",
+    "__v": 0,
+    "updated_by": "6832af7e0466922553a3a87d"
+  }
+}
+```
+
+_❌ Error Response:_
+
+```json
+{ "message": "Content not found" }
+```
+
+---
+
+### 📖 Get Single Content (For admins)
+
+**GET /api/v1/content/get/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+_✅ Response:_
+
+```json
+{
+  "message": "Content fetched successfully",
+  "content": {
+    //complete content details
   }
 }
 ```
@@ -1535,6 +1561,7 @@ Routes use middleware in this order:
 - GET /api/v1/auth/linkedin
 - GET /api/v1/auth/linkedin/callback
 - GET /api/v1/content/all (optional auth)
+- GET /api/v1/content/slug/:slug
 - GET /api/v1/content/flags/all
 - POST /api/v1/newsletter/subscribe
 

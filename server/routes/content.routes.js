@@ -9,6 +9,8 @@ const router = Router();
 router.get("/all", authOptionalMiddleware, ContentController.listAll); //this will give paginated content to keep load time low, [that is why no middleware here], but for admin, should i keep an all content route?
 //GET /api/content/all?page=2&limit=5&search=marketing%20hey%20today&content_type=article&sort=created_at:asc
 router.get("/flags/all", ContentController.getFlaggedContent); //featured, popular, hero section
+// Public route to get content by slug (for article detail pages)
+router.get("/slug/:slug", ContentController.getBySlug);
 
 router.use(authMiddleware);
 router.use(roleMiddleware(["superAdmin", "editor"]));

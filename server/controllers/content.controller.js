@@ -93,6 +93,24 @@ export const listAll = async (req, res) => {
   }
 };
 
+export const getBySlug = async (req, res) => {
+  console.log("Fetching content by Slug:", req.params.slug);
+  try {
+    const content = await Content.findOne({
+      slug: req.params.slug,
+      status: "published",
+    }).lean();
+
+    if (!content) return res.status(404).json({ message: "Content not found" });
+
+    console.log("Content fetched successfully by slug");
+    res.json({ message: "Content fetched successfully", content });
+  } catch (err) {
+    console.error("Error in getBySlug:", err);
+    res.status(500).json({ message: "Failed to fetch content" });
+  }
+};
+
 export const getById = async (req, res) => {
   console.log("Fetching content by ID:", req.params.id);
   try {
