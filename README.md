@@ -1420,9 +1420,19 @@ _Request Body:_
 
 ```json
 {
-  "name": "Suyash",
-  "bio": "Full Stack Developer and Open Source Enthusiast",
-  "photo_base64": "data:image/png;base64,..."
+  "name": "Maria Garcia",
+  "email": "maria.garcia@webcrafters.io",
+  "bio": "Full-stack engineer and open-source enthusiast with over 8 years of experience in the tech industry. Co-founder of WebCrafters Inc.",
+  "profile_image_base64": "[BASE64 DATA]",
+  "linkedin_url": "https://linkedin.com/in/mariagarciadev",
+  "twitter_url": "https://twitter.com/mgarciatweets",
+  "website_url": "https://mariagarcia.io",
+  "current_employment": {
+    "company_name": "WebCrafters Inc.",
+    "job_position": "Lead Software Engineer",
+    "company_logo_base64": "[BASE64 DATA]",
+    "description": "Leading the core product development team and mentoring junior developers."
+  }
 }
 ```
 
@@ -1448,7 +1458,7 @@ _Request Body:_ (only fields to update)
 ```json
 {
   "bio": "Senior Developer at Goldman Sachs",
-  "photo_base64": "data:image/png;base64,..."
+  "profile_image_base64": "data:image/png;base64,..."
 }
 ```
 
