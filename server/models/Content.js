@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
+import slugify from "slugify";
 
 const contentSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
-    slug: { type: String, required: true, unique: true, trim: true },
+    slug: { type: String, unique: true, trim: true },
     ai_summary: { type: String },
     body: { type: String },
     content_type: {
@@ -18,7 +19,9 @@ const contentSchema = new mongoose.Schema(
         "insight",
         "report",
         "webcast",
+        "movements",
       ],
+      required: true,
     },
     media_url: { type: String },
     pdf_url: { type: String },
@@ -32,9 +35,15 @@ const contentSchema = new mongoose.Schema(
       enum: ["draft", "scheduled", "published"],
       default: "draft",
     },
+    scheduled_for: { type: Date },
     featured: { type: Boolean, default: false },
     popular: { type: Boolean, default: false },
     hero: { type: Boolean, default: false },
+    series_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Series",
+      default: null,
+    },
     theme_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Theme" }],
     sub_theme_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "SubTheme" }],
     industry_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: "Industry" }],
@@ -77,6 +86,21 @@ const contentSchema = new mongoose.Schema(
   }
 );
 
+contentSchema.pre("save", async function (next) {
+  if (this.isNew || this.isModified("title")) {
+    const baseSlug = slugify(this.title, { lower: true, strict: true });
+    let slug = baseSlug;
+    let count = 1;
+
+    while (await mongoose.models.Content.findOne({ slug })) {
+      slug = `${baseSlug}-${count++}`;
+    }
+
+    this.slug = slug;
+  }
+  next();
+});
+
 contentSchema.index({ status: 1, publish_date: -1 });
 contentSchema.index({ theme_ids: 1, status: 1 });
 contentSchema.index({ sub_theme_ids: 1, status: 1 });
@@ -93,5 +117,8 @@ contentSchema.index({
   body: "text",
   ai_summary: "text",
 });
+contentSchema.index({ content_type: 1, status: 1, exec_role_ids: 1 });
+contentSchema.index({ status: 1, scheduled_for: 1 });
+contentSchema.index({ status: 1, series_id: 1, publish_date: -1 });
 
 export default mongoose.model("Content", contentSchema);

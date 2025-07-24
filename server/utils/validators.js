@@ -59,6 +59,7 @@ export const allowedContentTypes = [
   "insight",
   "report",
   "webcast",
+  "movements",
 ];
 
 export const validateContentType = (type) => {

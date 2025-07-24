@@ -10,11 +10,14 @@ import contentRoutes from "./routes/content.routes.js";
 import newsletterRoutes from "./routes/newsletter.routes.js";
 import tagRoutes from "./routes/tags.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import webConfigRoutes from "./routes/webconfig.routes.js";
+import seriesRoutes from "./routes/series.routes.js";
 import contributorRoutes from "./routes/contributor.routes.js";
 import passport from "passport";
 import "./configs/passport.js";
 import { globalIpRateLimiter } from "./utils/rateLimiters.js";
 import { config, getConfigStatus } from "./configs/env.js";
+import { startScheduler } from "./configs/cron.js";
 
 const app = express();
 
@@ -27,8 +30,8 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ limit: "5mb", extended: true }));
+app.use(express.json({ limit: "500kb" }));
+app.use(express.urlencoded({ limit: "500kb", extended: true }));
 app.use((req, res, next) => {
   if (req.path === config.HEALTH_CHECK_PATH) return next();
   return globalIpRateLimiter(req, res, next);
@@ -41,6 +44,8 @@ app.use("/api/v1/content", contentRoutes);
 app.use("/api/v1/newsletter", newsletterRoutes);
 app.use("/api/v1/tags", tagRoutes);
 app.use("/api/v1/contributors", contributorRoutes);
+app.use("/api/v1/web-configs", webConfigRoutes);
+app.use("/api/v1/series", seriesRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the API");
@@ -141,6 +146,7 @@ async function startServer() {
 
     console.log("📡 Connecting to database...");
     await connectDB();
+    startScheduler();
     server = app.listen(config.PORT, () => {
       console.log(`🌟 Server running on port ${config.PORT}`);
       console.log(`🔗 Environment: ${config.NODE_ENV}`);

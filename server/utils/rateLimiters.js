@@ -7,7 +7,7 @@ const hashEmail = (email = "") =>
 export const emailIpRateLimiter = (options) =>
   rateLimit({
     windowMs: options.windowMs || 10 * 60 * 1000,
-    max: options.max || 5,
+    max: options.max || 3,
     message: options.message || "Too many requests. Please try again later.",
     keyGenerator: (req, res) => {
       const email = req.body?.email || "";

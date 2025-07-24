@@ -20,7 +20,7 @@ router.post(
 router.post(
   "/login",
   emailIpRateLimiter({
-    max: 5,
+    max: 3,
     windowMs: 10 * 60 * 1000,
     message: "Too many login attempts. Please try again in 10 minutes.",
   }),
@@ -44,7 +44,15 @@ router.post(
   }),
   AuthController.forgotPassword
 );
-router.post("/reset-password/:token", AuthController.resetPassword);
+router.post(
+  "/reset-password/:token",
+  emailIpRateLimiter({
+    max: 5,
+    windowMs: 60 * 60 * 1000, // 1 hour
+    message: "Too many password resets. Try again in an hour.",
+  }),
+  AuthController.resetPassword
+);
 router.post("/logout", authMiddleware, AuthController.logout);
 router.get("/me", authMiddleware, AuthController.myProfile);
 router.put("/me/update", authMiddleware, AuthController.updateAdminProfile);

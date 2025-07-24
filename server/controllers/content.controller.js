@@ -1,9 +1,8 @@
 import Content from "../models/Content.js";
 import Contributor from "../models/Contributor.js";
 import {
-  deleteCloudinaryImage,
-  replaceImage,
-  uploadBase64Image,
+  deleteFromCloudinary,
+  cleanupOldImages,
 } from "../helpers/cloudinary.helpers.js";
 import mongoose from "mongoose";
 import { updateContentContributors } from "../helpers/contributor.helpers.js";
@@ -24,6 +23,8 @@ export const listAll = async (req, res) => {
       content_type,
       sort = "updated_at:desc",
       search,
+      exec_role_id,
+      series_id,
     } = req.query;
 
     const pageNum = Number(page);
@@ -48,13 +49,24 @@ export const listAll = async (req, res) => {
       filter.content_type = content_type;
     }
 
+    if (exec_role_id) {
+      if (!mongoose.Types.ObjectId.isValid(exec_role_id)) {
+        return res
+          .status(400)
+          .json({ message: "Invalid exec_role_id format." });
+      }
+      filter.exec_role_ids = exec_role_id;
+    }
+
+    if (series_id) {
+      if (!mongoose.Types.ObjectId.isValid(series_id)) {
+        return res.status(400).json({ message: "Invalid series_id format." });
+      }
+      filter.series_id = series_id;
+    }
+
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { slug: { $regex: search, $options: "i" } },
-        { body: { $regex: search, $options: "i" } },
-        { ai_summary: { $regex: search, $options: "i" } },
-      ];
+      filter.$text = { $search: search };
     }
 
     const [sortField, sortOrder] = sort.split(":");
@@ -69,13 +81,41 @@ export const listAll = async (req, res) => {
     }
     const sortOptions = { [sortField]: sortOrder === "asc" ? 1 : -1 };
 
-    const contents = await Content.find(filter)
-      .sort(sortOptions)
-      .skip((pageNum - 1) * limitNum)
-      .limit(limitNum)
-      .lean();
+    const projection = `
+  title 
+  slug 
+  content_type 
+  series_id, 
+  banner_image_url 
+  ai_summary 
+  meta_description 
+  meta_keywords 
+  publish_date 
+  featured 
+  popular 
+  hero 
+  media_url 
+  pdf_url 
+  theme_ids 
+  sub_theme_ids 
+  industry_ids 
+  exec_role_ids 
+  contributors.name 
+  contributors.role 
+  contributors.profile_image_url 
+  contributors.employment.company_name 
+  contributors.employment.job_position 
+`;
 
-    const total = await Content.countDocuments(filter);
+    const [contents, total] = await Promise.all([
+      Content.find(filter)
+        .sort(sortOptions)
+        .select(projection)
+        .skip((pageNum - 1) * limitNum)
+        .limit(limitNum)
+        .lean(),
+      Content.countDocuments(filter),
+    ]);
 
     console.log("Contents fetched successfully");
 
@@ -132,38 +172,29 @@ export const createContent = async (req, res) => {
     const data = { ...req.body };
     console.log("Received data:", {
       ...data,
-      banner_image_base64: data.banner_image_base64
-        ? "[BASE64_DATA]"
-        : undefined,
+      body: data.body ? `[BODY CONTENT: ${data.body.length} chars]` : undefined,
     });
 
     const titleError = validateRequiredString(data.title, "title");
     if (titleError) {
-      return res.status(400).json({ message: titleError });
+      throw new Error(titleError);
     }
 
     const typeError = validateContentType(data.content_type);
     if (typeError) {
-      return res.status(400).json({ message: typeError });
+      throw new Error(typeError);
     }
 
-    if (data.banner_image_base64) {
-      try {
-        const bannerUrl = await uploadBase64Image(
-          data.banner_image_base64,
-          "content_banners",
-          "Content"
+    if (data.status === "scheduled") {
+      if (!data.scheduled_for || new Date(data.scheduled_for) <= new Date()) {
+        throw new Error(
+          "A valid future date for 'scheduled_for' is required when status is 'scheduled'."
         );
-
-        data.banner_image_url = bannerUrl;
-        delete data.banner_image_base64;
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        return res.status(400).json({
-          message: "Failed to upload image",
-          error: uploadError.message,
-        });
       }
+    }
+
+    if (req.uploadResults?.banner_image_url) {
+      data.banner_image_url = req.uploadResults.banner_image_url;
     }
 
     if (Array.isArray(data.contributors)) {
@@ -180,8 +211,6 @@ export const createContent = async (req, res) => {
     const content = new Content({
       ...data,
       created_by: req.user.id,
-      // created_at: new Date(),
-      // updated_at: new Date(),
     });
 
     await content.save();
@@ -192,6 +221,11 @@ export const createContent = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating content:", err);
+
+    // Cleanup uploaded files if database save failed
+    if (req.uploadResults?.banner_image_url) {
+      await deleteFromCloudinary(req.uploadResults.banner_image_url, "Content");
+    }
     res.status(400).json({ message: "Error creating content" });
   }
 };
@@ -206,41 +240,53 @@ export const updateContent = async (req, res) => {
     }
 
     const data = { ...req.body };
-    console.log("Received data for update:", {
+    console.log("Received data:", {
       ...data,
-      banner_image_base64: data.banner_image_base64
-        ? "[BASE64_DATA]"
-        : undefined,
+      body: data.body ? `[BODY CONTENT: ${data.body.length} chars]` : undefined,
     });
 
-    const titleError = validateRequiredString(data.title, "title");
-    if (titleError) {
-      return res.status(400).json({ message: titleError });
-    }
-
-    const typeError = validateContentType(data.content_type);
-    if (typeError) {
-      return res.status(400).json({ message: typeError });
-    }
-
-    if (data.banner_image_base64) {
-      try {
-        const imageUrl = await replaceImage({
-          base64: data.banner_image_base64,
-          oldUrl: content.banner_image_url,
-          folder: "content_banners",
-          label: "Content",
-        });
-
-        data.banner_image_url = imageUrl;
-        delete data.banner_image_base64;
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        return res.status(400).json({
-          message: "Failed to upload image",
-          error: uploadError.message,
-        });
+    const forbiddenFields = ["_id", "created_by", "slug"];
+    for (const field of forbiddenFields) {
+      if (field in req.body) {
+        delete req.body[field];
       }
+    }
+
+    if (data.title) {
+      const titleError = validateRequiredString(data.title, "title");
+      if (titleError) {
+        throw new Error(titleError);
+      }
+    }
+
+    if (data.content_type) {
+      const typeError = validateContentType(data.content_type);
+      if (typeError) {
+        throw new Error(typeError);
+      }
+    }
+
+    if (data.status === "scheduled") {
+      // Check the incoming date or the already existing date on the document
+      const scheduleDate = data.scheduled_for || content.scheduled_for;
+      if (!scheduleDate || new Date(scheduleDate) <= new Date()) {
+        throw new Error(
+          "A valid future date for 'scheduled_for' is required when status is 'scheduled'."
+        );
+      }
+    }
+
+    if (data.title && data.title !== content.title) {
+      content.title = data.title;
+    }
+
+    if (req.uploadResults?.banner_image_url) {
+      await cleanupOldImages(
+        content.banner_image_url,
+        req.uploadResults.banner_image_url,
+        "Banner"
+      );
+      content.banner_image_url = req.uploadResults.banner_image_url;
     }
 
     if (Array.isArray(data.contributors)) {
@@ -257,23 +303,23 @@ export const updateContent = async (req, res) => {
       }
     }
 
-    const updated = await Content.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...data,
-        updated_by: req.user.id,
-        // updated_at: new Date(),
-      },
-      { new: true, runValidators: true }
-    );
+    content.set({ ...data, updated_by: req.user.id });
 
-    console.log("Content updated successfully:", updated._id);
+    await content.save();
+
+    console.log("Content updated successfully:", content._id);
     res.json({
       message: "Content updated successfully",
-      content: updated,
+      content,
     });
   } catch (err) {
     console.error("Error updating content:", err);
+
+    // Add cleanup logic for the new image if the update fails
+    if (req.uploadResults?.banner_image_url) {
+      await deleteFromCloudinary(req.uploadResults.banner_image_url, "Content");
+    }
+
     res.status(400).json({ message: "Error updating content" });
   }
 };
@@ -284,11 +330,41 @@ export const removeContent = async (req, res) => {
     const content = await Content.findById(req.params.id);
     if (!content) return res.status(404).json({ message: "Content not found" });
 
+    const imagesToCleanup = [];
     if (content.banner_image_url) {
+      imagesToCleanup.push({
+        url: content.banner_image_url,
+        label: "Banner",
+      });
+    }
+
+    if (Array.isArray(content.contributors)) {
+      for (const contributor of content.contributors) {
+        if (contributor.uploaded_by_content && contributor.profile_image_url) {
+          imagesToCleanup.push({
+            url: contributor.profile_image_url,
+            label: `Contributor_Profile (${contributor.name})`,
+          });
+        }
+
+        if (
+          contributor.employment &&
+          contributor.employment.company_logo_uploaded_by_content &&
+          contributor.employment.company_logo_url
+        ) {
+          imagesToCleanup.push({
+            url: contributor.employment.company_logo_url,
+            label: `Company_Logo (${contributor.name})`,
+          });
+        }
+      }
+    }
+
+    for (const { url, label } of imagesToCleanup) {
       try {
-        await deleteCloudinaryImage(content.banner_image_url, "Content");
+        await deleteFromCloudinary(url, label);
       } catch (err) {
-        console.error("Warning: Failed to delete content image", err.message);
+        console.error(`Warning: Failed to delete ${label} image`, err.message);
       }
     }
 
@@ -326,7 +402,6 @@ export const publishContent = async (req, res) => {
     content.status = "published";
     content.publish_date = publishDate;
     content.updated_by = req.user.id;
-    // content.updated_at = new Date();
 
     await content.save();
     console.log("Content published successfully:", content._id);
@@ -349,18 +424,7 @@ export const patchContributorInContent = async (req, res) => {
   const { contentId, contributorSubId } = req.params;
   const updates = { ...req.body };
 
-  console.log("Received data:", {
-    ...updates,
-    profile_image_base64: updates.profile_image_base64
-      ? "[BASE64_DATA]"
-      : undefined,
-    employment: {
-      ...updates.employment,
-      company_logo_base64: updates.employment?.company_logo_base64
-        ? "[BASE64_DATA]"
-        : undefined,
-    },
-  });
+  console.log("Received data:", updates);
 
   try {
     const content = await Content.findOne({
@@ -396,57 +460,58 @@ export const patchContributorInContent = async (req, res) => {
       }
     }
 
-    if (updates.profile_image_base64) {
-      const imageUrl = await replaceImage({
-        base64: updates.profile_image_base64,
-        oldUrl: contributor.uploaded_by_content
-          ? contributor.profile_image_url
-          : null,
-        folder: "contributors",
-        label: "Contributor_image",
-      });
+    if (req.uploadResults?.profile_image_url) {
+      // Clean up old image if it was uploaded by content
+      if (contributor.uploaded_by_content && contributor.profile_image_url) {
+        await deleteFromCloudinary(
+          contributor.profile_image_url,
+          "Contributor"
+        );
+      }
 
-      contributor.profile_image_url = imageUrl;
+      contributor.profile_image_url = req.uploadResults.profile_image_url;
       contributor.uploaded_by_content = true;
-      delete updates.profile_image_base64;
     }
 
     if (updates.employment && typeof updates.employment === "object") {
       if (!contributor.employment) {
         contributor.employment = {};
       }
-
       const allowedEmploymentFields = [
         "company_name",
         "job_position",
         "description",
-        "company_logo_url",
       ];
-
       for (const field of allowedEmploymentFields) {
         if (updates.employment[field] !== undefined) {
           contributor.employment[field] = updates.employment[field];
         }
       }
-
-      if (updates.employment.company_logo_base64) {
-        const imageUrl = await replaceImage({
-          base64: updates.employment.company_logo_base64,
-          oldUrl: contributor.employment.company_logo_uploaded_by_content
-            ? contributor.employment.company_logo_url
-            : null,
-          folder: "company_logos",
-          label: "Contributor_company_logo",
-        });
-
-        contributor.employment.company_logo_url = imageUrl;
-        contributor.employment.company_logo_uploaded_by_content = true;
-
-        delete updates.employment.company_logo_base64;
-      }
     }
 
-    // content.updated_at = new Date();
+    if (req.uploadResults?.company_logo_url) {
+      // Ensure the employment sub-document exists
+      if (!contributor.employment) {
+        contributor.employment = {};
+      }
+
+      // Clean up old logo if it was uploaded by content
+      if (
+        contributor.employment.company_logo_uploaded_by_content &&
+        contributor.employment.company_logo_url
+      ) {
+        await deleteFromCloudinary(
+          contributor.employment.company_logo_url,
+          "Company Logo"
+        );
+      }
+
+      // Update the URL and the flag
+      contributor.employment.company_logo_url =
+        req.uploadResults.company_logo_url;
+      contributor.employment.company_logo_uploaded_by_content = true;
+    }
+
     content.updated_by = req.user.id;
 
     await content.save();
@@ -455,8 +520,24 @@ export const patchContributorInContent = async (req, res) => {
 
     res.json({ message: "Contributor updated in content", contributor });
   } catch (err) {
-    console.error("Error updating contributor in content:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Error updating content contributor:", err);
+
+    // Add cleanup logic for the new image if the update fails
+    if (req.uploadResults?.profile_image_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.profile_image_url,
+        "Content_Contributor"
+      );
+    }
+
+    if (req.uploadResults?.company_logo_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.company_logo_url,
+        "Content_Contributor_company"
+      );
+    }
+
+    res.status(400).json({ message: "Error updating content contributor" });
   }
 };
 
@@ -485,11 +566,10 @@ export const deleteContributorFromContent = async (req, res) => {
 
     if (contributor.uploaded_by_content && contributor.profile_image_url) {
       try {
-        await deleteCloudinaryImage(
+        await deleteFromCloudinary(
           contributor.profile_image_url,
-          "Contributor_image"
+          "Contributor"
         );
-        // console.log("Deleted content-specific contributor image.");
       } catch (err) {
         console.warn("Failed to delete contributor image:", err.message);
       }
@@ -500,18 +580,16 @@ export const deleteContributorFromContent = async (req, res) => {
       contributor.employment?.company_logo_url
     ) {
       try {
-        await deleteCloudinaryImage(
+        await deleteFromCloudinary(
           contributor.employment.company_logo_url,
-          "Contributor_company_logo"
+          "Company Logo"
         );
-        // console.log("Deleted content-specific company logo.");
       } catch (err) {
         console.warn("Failed to delete company logo:", err.message);
       }
     }
 
     contributor.deleteOne();
-    // content.updated_at = new Date();
     content.updated_by = req.user.id;
 
     await content.save();
@@ -535,7 +613,7 @@ export const addContributorToContent = async (req, res) => {
       .json({ message: "Valid contributor_id is required." });
   }
 
-  console.log("Adding contributor to content:", contentId, contributor_id);
+  console.log(`Adding contributor: ${contributor_id} to content: ${contentId}`);
 
   try {
     const content = await Content.findById(contentId);
@@ -587,7 +665,6 @@ export const addContributorToContent = async (req, res) => {
     }
 
     content.contributors.push(contributorSnapshot);
-    // content.updated_at = new Date();
     content.updated_by = req.user.id;
 
     await content.save();
@@ -642,7 +719,6 @@ export const toggleFlag = async (req, res) => {
 
     content[flag] = !content[flag];
     content.updated_by = req.user.id;
-    // content.updated_at = new Date();
     await content.save();
 
     console.log(

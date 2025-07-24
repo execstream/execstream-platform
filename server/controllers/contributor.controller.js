@@ -1,7 +1,6 @@
 import {
-  deleteCloudinaryImage,
-  replaceImage,
-  uploadBase64Image,
+  cleanupOldImages,
+  deleteFromCloudinary,
 } from "../helpers/cloudinary.helpers.js";
 import Contributor from "../models/Contributor.js";
 import {
@@ -13,13 +12,18 @@ import {
 export const getAll = async (req, res) => {
   console.log("Fetching all contributors");
   try {
+    // console.time("Test");
     const contributors = await Contributor.find({})
       .sort({ created_at: -1 })
       .lean();
+    // console.timeEnd("Test");
 
-    console.log(`Found ${contributors.length} contributors`);
+    const total_contributors = contributors.length;
+
+    console.log(`Found ${total_contributors} contributors`);
     res.json({
       message: "Contributors fetched successfully",
+      total_contributors,
       contributors,
     });
   } catch (err) {
@@ -54,15 +58,7 @@ export const create = async (req, res) => {
     const data = { ...req.body };
     console.log("Received data for creation:", {
       ...data,
-      profile_image_base64: data.profile_image_base64
-        ? "[BASE64_DATA]"
-        : undefined,
-      current_employment: {
-        ...data.current_employment,
-        company_logo_base64: data.current_employment?.company_logo_base64
-          ? "[BASE64_DATA]"
-          : undefined,
-      },
+      files: req.files ? Object.keys(req.files) : "none",
     });
 
     const nameError = validateRequiredString(data.name, "name");
@@ -70,64 +66,56 @@ export const create = async (req, res) => {
       return res.status(400).json({ message: nameError });
     }
 
-    const emailError = validateEmail(data.email);
-    if (emailError) {
-      return res.status(400).json({ message: emailError });
-    }
-
-    const urlError = validateURL(data);
-    if (urlError) {
-      return res.status(400).json({ message: urlError });
-    }
-
-    if (data.profile_image_base64) {
-      try {
-        const photoUrl = await uploadBase64Image(
-          data.profile_image_base64,
-          "contributors",
-          "Contributor"
-        );
-
-        data.profile_image_url = photoUrl;
-        delete data.profile_image_base64;
-      } catch (uploadError) {
-        console.error("Cloudinary upload error:", uploadError);
-        return res.status(400).json({
-          message: "Failed to upload contributor photo",
-          error: uploadError.message,
-        });
+    if (data.email) {
+      const emailError = validateEmail(data.email);
+      if (emailError) {
+        return res.status(400).json({ message: emailError });
       }
     }
 
-    if (data.current_employment?.company_logo_base64) {
-      try {
-        const logoUrl = await uploadBase64Image(
-          data.current_employment.company_logo_base64,
-          "company_logos",
-          "Contributor_company"
-        );
-        data.current_employment.company_logo_url = logoUrl;
-        delete data.current_employment.company_logo_base64;
-      } catch (uploadError) {
-        console.error("Company logo upload error:", uploadError);
-        return res.status(400).json({
-          message: "Failed to upload company logo",
-          error: uploadError.message,
-        });
+    if (data.linkedin_url || data.twitter_url || data.website_url) {
+      const urlError = validateURL(data);
+      if (urlError) {
+        return res.status(400).json({ message: urlError });
       }
+    }
+
+    if (req.uploadResults?.profile_image_url) {
+      data.profile_image_url = req.uploadResults.profile_image_url;
+    }
+
+    if (req.uploadResults?.company_logo_url) {
+      if (!data.current_employment) {
+        data.current_employment = {};
+      }
+      data.current_employment.company_logo_url =
+        req.uploadResults.company_logo_url;
     }
 
     const contributor = new Contributor({
       ...data,
       created_by: req.user.id,
-      // created_at: new Date(),
-      // updated_at: new Date(),
     });
     await contributor.save();
     console.log("Created new contributor: ", contributor._id);
     res.status(201).json({ message: "Contributor created", contributor });
   } catch (err) {
     console.error("Error creating contributor:", err);
+
+    // Cleanup uploaded files if database save failed
+    if (req.uploadResults?.profile_image_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.profile_image_url,
+        "Contributor"
+      );
+    }
+    if (req.uploadResults?.company_logo_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.company_logo_url,
+        "Contributor_company"
+      );
+    }
+
     if (err.code === 11000) {
       return res.status(400).json({
         message: "A contributor with this email already exists",
@@ -145,83 +133,83 @@ export const update = async (req, res) => {
       console.log("Contributor not found");
       return res.status(404).json({ message: "Contributor not found" });
     }
-
     const data = { ...req.body };
     console.log("Received data for update:", {
       ...data,
-      profile_image_base64: data.profile_image_base64
-        ? "[BASE64_DATA]"
-        : undefined,
-      current_employment: {
-        ...data.current_employment,
-        company_logo_base64: data.current_employment?.company_logo_base64
-          ? "[BASE64_DATA]"
-          : undefined,
-      },
+      files: req.files ? Object.keys(req.files) : "none",
     });
 
-    const emailError = validateEmail(data.email);
-    if (emailError) {
-      return res.status(400).json({ message: emailError });
+    // If new employment data is being sent, merge it with the existing data
+    if (data.current_employment) {
+      data.current_employment = {
+        ...contributor.toObject().current_employment, // Preserve existing fields
+        ...data.current_employment, // Overwrite with new fields
+      };
     }
 
-    const urlError = validateURL(data);
-    if (urlError) {
-      return res.status(400).json({ message: urlError });
-    }
-
-    if (data.profile_image_base64) {
-      try {
-        const imageUrl = await replaceImage({
-          base64: data.profile_image_base64,
-          oldUrl: contributor.profile_image_url,
-          folder: "contributors",
-          label: "Contributor",
-        });
-
-        data.profile_image_url = imageUrl;
-        delete data.profile_image_base64;
-      } catch (uploadError) {
-        console.error("Cloudinary upload error during update:", uploadError);
-        return res.status(400).json({
-          message: "Failed to upload contributor photo",
-          error: uploadError.message,
-        });
+    if (data.email) {
+      const emailError = validateEmail(data.email);
+      if (emailError) {
+        return res.status(400).json({ message: emailError });
       }
     }
 
-    if (data.current_employment?.company_logo_base64) {
-      try {
-        const imageUrl = await replaceImage({
-          base64: data.current_employment.company_logo_base64,
-          oldUrl: contributor.current_employment?.company_logo_url,
-          folder: "company_logos",
-          label: "Contributor_company_logo",
-        });
-        data.current_employment.company_logo_url = imageUrl;
-        delete data.current_employment.company_logo_base64;
-      } catch (uploadError) {
-        console.error("Company logo upload error:", uploadError);
-        return res.status(400).json({
-          message: "Failed to upload company logo",
-          error: uploadError.message,
-        });
+    if (data.linkedin_url || data.twitter_url || data.website_url) {
+      const urlError = validateURL(data);
+      if (urlError) {
+        return res.status(400).json({ message: urlError });
       }
     }
 
-    const updated = await Contributor.findByIdAndUpdate(
-      req.params.id,
-      {
-        ...data,
-        // updated_at: new Date(),
-      },
-      { new: true, runValidators: true }
-    );
+    if (req.uploadResults?.profile_image_url) {
+      // Clean up old image
+      await cleanupOldImages(
+        contributor.profile_image_url,
+        req.uploadResults.profile_image_url,
+        "Contributor"
+      );
+      data.profile_image_url = req.uploadResults.profile_image_url;
+    }
+
+    if (req.uploadResults?.company_logo_url) {
+      // Clean up old logo
+      await cleanupOldImages(
+        contributor.current_employment?.company_logo_url,
+        req.uploadResults.company_logo_url,
+        "Contributor_company"
+      );
+
+      if (!data.current_employment) {
+        data.current_employment = contributor.current_employment || {};
+      }
+      data.current_employment.company_logo_url =
+        req.uploadResults.company_logo_url;
+    }
+
+    const updated = await Contributor.findByIdAndUpdate(req.params.id, data, {
+      new: true,
+      runValidators: true,
+    });
 
     console.log("Updated contributor:", updated);
     res.json({ message: "Contributor updated", updated });
   } catch (err) {
     console.error("Error updating contributor:", err);
+
+    // Cleanup newly uploaded files if database update failed
+    if (req.uploadResults?.profile_image_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.profile_image_url,
+        "Contributor"
+      );
+    }
+    if (req.uploadResults?.company_logo_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.company_logo_url,
+        "Contributor_company"
+      );
+    }
+
     if (err.code === 11000) {
       return res.status(400).json({
         message: "A contributor with this email already exists",
@@ -241,28 +229,14 @@ export const remove = async (req, res) => {
     }
 
     if (contributor.profile_image_url) {
-      try {
-        await deleteCloudinaryImage(
-          contributor.profile_image_url,
-          "Contributor"
-        );
-      } catch (err) {
-        console.error(
-          "Warning: Failed to delete contributor image",
-          err.message
-        );
-      }
+      await deleteFromCloudinary(contributor.profile_image_url, "Contributor");
     }
 
     if (contributor.current_employment?.company_logo_url) {
-      try {
-        await deleteCloudinaryImage(
-          contributor.current_employment.company_logo_url,
-          "Contributor_company"
-        );
-      } catch (err) {
-        console.error("Warning: Failed to delete company logo", err.message);
-      }
+      await deleteFromCloudinary(
+        contributor.current_employment.company_logo_url,
+        "Contributor_company"
+      );
     }
 
     console.log("Deleted contributor");

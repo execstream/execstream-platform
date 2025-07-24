@@ -1804,5 +1804,5 @@ fetch("/api/v1/newsletter/issue/create", {
 For API support and documentation updates, please contact [Suyash Pandey](mailto:suyash@exec-stream.com).
 
 **API Version:** v1  
-**Last Updated:** June 2025  
+**Last Updated:** July 24, 2025  
 **Documentation Status:** ✅ Complete
