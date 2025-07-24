@@ -12,11 +12,9 @@ import {
 export const getAll = async (req, res) => {
   console.log("Fetching all contributors");
   try {
-    // console.time("Test");
     const contributors = await Contributor.find({})
       .sort({ created_at: -1 })
       .lean();
-    // console.timeEnd("Test");
 
     const total_contributors = contributors.length;
 
@@ -102,7 +100,6 @@ export const create = async (req, res) => {
   } catch (err) {
     console.error("Error creating contributor:", err);
 
-    // Cleanup uploaded files if database save failed
     if (req.uploadResults?.profile_image_url) {
       await deleteFromCloudinary(
         req.uploadResults.profile_image_url,
@@ -139,11 +136,10 @@ export const update = async (req, res) => {
       files: req.files ? Object.keys(req.files) : "none",
     });
 
-    // If new employment data is being sent, merge it with the existing data
     if (data.current_employment) {
       data.current_employment = {
-        ...contributor.toObject().current_employment, // Preserve existing fields
-        ...data.current_employment, // Overwrite with new fields
+        ...contributor.toObject().current_employment,
+        ...data.current_employment,
       };
     }
 
@@ -162,7 +158,6 @@ export const update = async (req, res) => {
     }
 
     if (req.uploadResults?.profile_image_url) {
-      // Clean up old image
       await cleanupOldImages(
         contributor.profile_image_url,
         req.uploadResults.profile_image_url,
@@ -172,7 +167,6 @@ export const update = async (req, res) => {
     }
 
     if (req.uploadResults?.company_logo_url) {
-      // Clean up old logo
       await cleanupOldImages(
         contributor.current_employment?.company_logo_url,
         req.uploadResults.company_logo_url,
@@ -196,7 +190,6 @@ export const update = async (req, res) => {
   } catch (err) {
     console.error("Error updating contributor:", err);
 
-    // Cleanup newly uploaded files if database update failed
     if (req.uploadResults?.profile_image_url) {
       await deleteFromCloudinary(
         req.uploadResults.profile_image_url,

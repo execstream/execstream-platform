@@ -35,11 +35,11 @@ router.post(
 
 router.patch(
   "/update/:id",
-  uploadContentFiles, // Handle file uploads
-  handleUploadError, // Handle upload errors
-  processContentUploads, // Process and upload to Cloudinary
+  uploadContentFiles, 
+  handleUploadError, 
+  processContentUploads,
   parseData,
-  ContentController.updateContent // controller
+  ContentController.updateContent
 );
 
 router.post(

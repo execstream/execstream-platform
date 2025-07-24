@@ -1,11 +1,8 @@
 import multer from "multer";
 
-// Configure multer with memory storage
 const storage = multer.memoryStorage();
 
-// File filter for images only
 const fileFilter = (req, file, cb) => {
-  // Check if file is an image
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
   } else {
@@ -13,7 +10,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer instance with production-ready config
 const upload = multer({
   storage,
   fileFilter,

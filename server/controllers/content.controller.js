@@ -222,7 +222,6 @@ export const createContent = async (req, res) => {
   } catch (err) {
     console.error("Error creating content:", err);
 
-    // Cleanup uploaded files if database save failed
     if (req.uploadResults?.banner_image_url) {
       await deleteFromCloudinary(req.uploadResults.banner_image_url, "Content");
     }
@@ -267,7 +266,6 @@ export const updateContent = async (req, res) => {
     }
 
     if (data.status === "scheduled") {
-      // Check the incoming date or the already existing date on the document
       const scheduleDate = data.scheduled_for || content.scheduled_for;
       if (!scheduleDate || new Date(scheduleDate) <= new Date()) {
         throw new Error(
@@ -315,7 +313,6 @@ export const updateContent = async (req, res) => {
   } catch (err) {
     console.error("Error updating content:", err);
 
-    // Add cleanup logic for the new image if the update fails
     if (req.uploadResults?.banner_image_url) {
       await deleteFromCloudinary(req.uploadResults.banner_image_url, "Content");
     }
@@ -461,7 +458,6 @@ export const patchContributorInContent = async (req, res) => {
     }
 
     if (req.uploadResults?.profile_image_url) {
-      // Clean up old image if it was uploaded by content
       if (contributor.uploaded_by_content && contributor.profile_image_url) {
         await deleteFromCloudinary(
           contributor.profile_image_url,
@@ -490,12 +486,10 @@ export const patchContributorInContent = async (req, res) => {
     }
 
     if (req.uploadResults?.company_logo_url) {
-      // Ensure the employment sub-document exists
       if (!contributor.employment) {
         contributor.employment = {};
       }
 
-      // Clean up old logo if it was uploaded by content
       if (
         contributor.employment.company_logo_uploaded_by_content &&
         contributor.employment.company_logo_url
@@ -506,7 +500,6 @@ export const patchContributorInContent = async (req, res) => {
         );
       }
 
-      // Update the URL and the flag
       contributor.employment.company_logo_url =
         req.uploadResults.company_logo_url;
       contributor.employment.company_logo_uploaded_by_content = true;
@@ -522,7 +515,6 @@ export const patchContributorInContent = async (req, res) => {
   } catch (err) {
     console.error("Error updating content contributor:", err);
 
-    // Add cleanup logic for the new image if the update fails
     if (req.uploadResults?.profile_image_url) {
       await deleteFromCloudinary(
         req.uploadResults.profile_image_url,

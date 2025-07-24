@@ -59,7 +59,6 @@ export const addBanner = async (req, res) => {
       .json({ message: "Banner added successfully", banner: newBanner });
   } catch (err) {
     console.error("Error adding banner:", err);
-    // Cleanup the uploaded file if DB save fails
     await deleteFromCloudinary(imageUrl, "Failed Banner Upload");
     res.status(500).json({ message: "Error adding banner" });
   }
@@ -113,7 +112,6 @@ export const updateExpert = async (req, res) => {
     const oldImageUrl = expert.expert_profile_image_url;
     const newImageUrl = req.uploadResults?.expert_profile_image_url;
 
-    // Update fields from body
     expert.name = req.body.name || expert.name;
     expert.job_position = req.body.job_position || expert.job_position;
     expert.company_name = req.body.company_name || expert.company_name;
@@ -128,7 +126,6 @@ export const updateExpert = async (req, res) => {
 
     const updatedExpert = await expert.save();
 
-    // After successful save, delete old image if a new one was uploaded
     if (newImageUrl && oldImageUrl) {
       await deleteFromCloudinary(oldImageUrl, "Old Expert Profile Image");
     }
@@ -139,7 +136,6 @@ export const updateExpert = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating expert:", err);
-    // If update fails, delete the newly uploaded image to prevent orphans
     if (req.uploadResults?.expert_profile_image_url) {
       await deleteFromCloudinary(
         req.uploadResults.expert_profile_image_url,
@@ -201,7 +197,6 @@ const deleteItemFactory =
         });
       }
 
-      // Check if the item has an image URL before trying to delete
       if (item[imageUrlField]) {
         await deleteFromCloudinary(item[imageUrlField], resourceName);
       }

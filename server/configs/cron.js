@@ -27,11 +27,10 @@ const publishScheduledContent = async () => {
   try {
     const now = new Date();
 
-    // Find content that is "scheduled" and its scheduled_for time is in the past
     const contentsToPublish = await Content.find({
       status: "scheduled",
       scheduled_for: { $lte: now },
-    }).select("_id title"); // Select only necessary fields
+    }).select("_id title");
 
     if (contentsToPublish.length === 0) {
       console.log("📌 No content to publish at this time.");
@@ -42,7 +41,6 @@ const publishScheduledContent = async () => {
 
     const contentIds = contentsToPublish.map((content) => content._id);
 
-    // Update all found content at once
     const result = await Content.updateMany(
       { _id: { $in: contentIds } },
       { $set: { status: "published", publish_date: now } }

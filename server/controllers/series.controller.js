@@ -135,7 +135,7 @@ export const update = async (req, res) => {
     }
 
     existingSeries.set({ ...req.body, updated_by: req.user.id });
-    await existingSeries.save(); // This triggers pre('save')
+    await existingSeries.save();
 
     res.json({
       message: "Series updated successfully",
