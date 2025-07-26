@@ -13,7 +13,7 @@ const authMiddleware = async (req, res, next) => {
       console.error("Token verification failed or invalid token structure");
       return res.status(401).json({ message: "Invalid token" });
     }
-    const user = await Admin.findOne({ _id: decoded.id, isDeleted: false }).select("-password");
+    const user = await Admin.findOne({ _id: decoded.id }).select("-password");
     if (!user) {
       console.error("No user found with the provided token ID: ", decoded.id);
       return res.status(404).json({ message: "User not found" });

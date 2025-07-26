@@ -20,21 +20,108 @@ const sanitizeAdmin = (adminDoc) => {
   return obj;
 };
 
-export const register = async (req, res) => {
-  console.log("Registration attempt:", req.body);
-  if (
-    !req.body.name ||
-    !req.body.email ||
-    !req.body.password ||
-    !req.body.role ||
-    !req.body.otp
-  ) {
+// export const register = async (req, res) => {
+//   console.log("Registration attempt:", req.body);
+//   if (
+//     !req.body.name ||
+//     !req.body.email ||
+//     !req.body.password ||
+//     !req.body.role ||
+//     !req.body.otp
+//   ) {
+//     return res
+//       .status(400)
+//       .json({ message: "All fields including OTP are required." });
+//   }
+//   try {
+//     const { name, email, password, role, otp } = req.body;
+//     const emailError = validateEmail(email);
+//     if (emailError) {
+//       console.error("[ValidationError] Invalid email format", {
+//         attemptedEmail: email,
+//         error: emailError,
+//         timestamp: new Date().toISOString(),
+//         ip: req.ip,
+//         route: req.originalUrl,
+//       });
+
+//       return res.status(400).json({ message: emailError });
+//     }
+
+//     const passwordError = validateStrongPassword(password);
+//     if (passwordError) {
+//       console.error("[ValidationError] Weak password", {
+//         attemptedEmail: email,
+//         error: passwordError,
+//         timestamp: new Date().toISOString(),
+//         ip: req.ip,
+//         route: req.originalUrl,
+//       });
+//       return res.status(400).json({ message: passwordError });
+//     }
+
+//     const emailNormalized = email.toLowerCase();
+//     const exists = await Admin.findOne({ email: emailNormalized });
+//     if (exists) {
+//       console.log("Registration attempt with existing email:", emailNormalized);
+//       return res.status(400).json({ message: "Email already registered." });
+//     }
+
+//     const otpRecord = await Otp.findOne({ email: emailNormalized });
+//     if (!otpRecord) {
+//       console.log("No OTP found for this email.");
+//       return res.status(400).json({ message: "No OTP found for this email." });
+//     }
+
+//     if (otpRecord.expiresAt < Date.now()) {
+//       console.log("OTP has expired.");
+//       await otpRecord.deleteOne();
+//       return res
+//         .status(400)
+//         .json({ message: "OTP has expired. Please request a new one." });
+//     }
+
+//     const isMatch = await bcrypt.compare(otp, otpRecord.code);
+//     if (!isMatch) {
+//       console.log("OTP did not match.");
+//       return res
+//         .status(400)
+//         .json({ message: "Invalid OTP. Please try again." });
+//     }
+
+//     const password_hash = await bcrypt.hash(password, 10);
+//     const admin = new Admin({
+//       name,
+//       email: emailNormalized,
+//       password: password_hash,
+//       role,
+//     });
+//     await admin.save();
+//     await otpRecord.deleteOne();
+
+//     await generateToken(admin, res);
+
+//     console.log("New admin registered:", emailNormalized);
+
+//     res.status(201).json({
+//       message: "Admin registered successfully.",
+//       admin: sanitizeAdmin(admin),
+//     });
+//   } catch (err) {
+//     console.error("Registration error:", err);
+//     res.status(500).json({ message: "Registration failed." });
+//   }
+// };
+
+export const login = async (req, res) => {
+  console.log("Login attempt:", req.body);
+  if (!req.body.email || !req.body.password || !req.body.otp) {
     return res
       .status(400)
       .json({ message: "All fields including OTP are required." });
   }
   try {
-    const { name, email, password, role, otp } = req.body;
+    const { email, password, otp } = req.body;
     const emailError = validateEmail(email);
     if (emailError) {
       console.error("[ValidationError] Invalid email format", {
@@ -47,24 +134,16 @@ export const register = async (req, res) => {
 
       return res.status(400).json({ message: emailError });
     }
-
-    const passwordError = validateStrongPassword(password);
-    if (passwordError) {
-      console.error("[ValidationError] Weak password", {
-        attemptedEmail: email,
-        error: passwordError,
-        timestamp: new Date().toISOString(),
+    const emailNormalized = email.toLowerCase();
+    const admin = await Admin.findOne({ email: emailNormalized });
+    if (!admin) {
+      console.error("[LoginError] Admin not found for given email", {
+        attemptedEmail: emailNormalized,
         ip: req.ip,
+        timestamp: new Date().toISOString(),
         route: req.originalUrl,
       });
-      return res.status(400).json({ message: passwordError });
-    }
-
-    const emailNormalized = email.toLowerCase();
-    const exists = await Admin.findOne({ email: emailNormalized });
-    if (exists) {
-      console.log("Registration attempt with existing email:", emailNormalized);
-      return res.status(400).json({ message: "Email already registered." });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const otpRecord = await Otp.findOne({ email: emailNormalized });
@@ -81,54 +160,6 @@ export const register = async (req, res) => {
         .json({ message: "OTP has expired. Please request a new one." });
     }
 
-    const isMatch = await bcrypt.compare(otp, otpRecord.code);
-    if (!isMatch) {
-      console.log("OTP did not match.");
-      return res
-        .status(400)
-        .json({ message: "Invalid OTP. Please try again." });
-    }
-
-    const password_hash = await bcrypt.hash(password, 10);
-    const admin = new Admin({
-      name,
-      email: emailNormalized,
-      password: password_hash,
-      role,
-    });
-    await admin.save();
-    await otpRecord.deleteOne();
-
-    await generateToken(admin, res);
-
-    console.log("New admin registered:", emailNormalized);
-
-    res.status(201).json({
-      message: "Admin registered successfully.",
-      admin: sanitizeAdmin(admin),
-    });
-  } catch (err) {
-    console.error("Registration error:", err);
-    res.status(500).json({ message: "Registration failed." });
-  }
-};
-
-export const login = async (req, res) => {
-  console.log("Login attempt:", req.body);
-  try {
-    const { email, password } = req.body;
-    const emailNormalized = email.toLowerCase();
-    const admin = await Admin.findOne({ email: emailNormalized });
-    if (!admin) {
-      console.error("[LoginError] Admin not found for given email", {
-        attemptedEmail: emailNormalized,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-        route: req.originalUrl,
-      });
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
     const valid = await bcrypt.compare(password, admin.password);
     if (!valid) {
       console.error("[LoginError] Credential mismatch", {
@@ -141,24 +172,25 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    if (admin.isDeleted) {
-      const deletionDeadline = new Date(
-        admin.deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000
-      );
-      if (Date.now() > deletionDeadline) {
-        return res
-          .status(403)
-          .json({ message: "Account has been permanently deleted." });
-      } else {
-        // Reactivate
-        admin.isDeleted = false;
-        admin.deletedAt = null;
-        console.log("Reactivating soft-deleted account:", emailNormalized);
-      }
-    }
+    // if (admin.isDeleted) {
+    //   const deletionDeadline = new Date(
+    //     admin.deletedAt.getTime() + 30 * 24 * 60 * 60 * 1000
+    //   );
+    //   if (Date.now() > deletionDeadline) {
+    //     return res
+    //       .status(403)
+    //       .json({ message: "Account has been permanently deleted." });
+    //   } else {
+    //     // Reactivate
+    //     admin.isDeleted = false;
+    //     admin.deletedAt = null;
+    //     console.log("Reactivating soft-deleted account:", emailNormalized);
+    //   }
+    // }
 
     admin.last_login = new Date();
     await admin.save();
+    await otpRecord.deleteOne();
 
     await generateToken(admin, res);
     console.log("Admin logged in:", emailNormalized);
@@ -178,7 +210,6 @@ export const myProfile = async (req, res) => {
   try {
     const admin = await Admin.findOne({
       _id: req.user.id,
-      isDeleted: false,
     }).select("-password");
 
     if (!admin) {
@@ -224,9 +255,7 @@ export const updateRole = async (req, res) => {
   }
 
   try {
-    const admin = await Admin.findOne({ _id: id, isDeleted: false }).select(
-      "-password"
-    );
+    const admin = await Admin.findOne({ _id: id }).select("-password");
     if (!admin) {
       console.error("[UpdateRoleError] Admin not found", {
         adminId: id,
@@ -258,7 +287,7 @@ export const updateRole = async (req, res) => {
 export const getAllAdmins = async (req, res) => {
   console.log("Fetching all admins");
   try {
-    const admins = await Admin.find({ isDeleted: false }).select("-password");
+    const admins = await Admin.find({}).select("-password");
     console.log("Admins fetched successfully");
     res
       .status(200)
@@ -317,313 +346,313 @@ export const updateAdminProfile = async (req, res) => {
   }
 };
 
-export const requestEmailChange = async (req, res) => {
-  const { new_email, current_password } = req.body;
+// export const requestEmailChange = async (req, res) => {
+//   const { new_email, current_password } = req.body;
 
-  if (!new_email || !current_password) {
-    return res
-      .status(400)
-      .json({ message: "New email and password are required." });
-  }
+//   if (!new_email || !current_password) {
+//     return res
+//       .status(400)
+//       .json({ message: "New email and password are required." });
+//   }
 
-  const emailNormalized = new_email.toLowerCase();
+//   const emailNormalized = new_email.toLowerCase();
 
-  console.log("[SendEmailRequest] Email change request for: ", req.user.id);
+//   console.log("[SendEmailRequest] Email change request for: ", req.user.id);
 
-  try {
-    const admin = await Admin.findOne({ _id: req.user.id, isDeleted: false });
-    if (!admin) {
-      console.error("Admin not found");
-      return res.status(404).json({ message: "Admin not found." });
-    }
+//   try {
+//     const admin = await Admin.findOne({ _id: req.user.id, isDeleted: false });
+//     if (!admin) {
+//       console.error("Admin not found");
+//       return res.status(404).json({ message: "Admin not found." });
+//     }
 
-    if (admin.provider !== "local") {
-      console.error(
-        "[AdminEmailUpdateBlocked] Third-party auth user attempted to change email",
-        {
-          userId: admin._id?.toString(),
-          emailAttempted: email,
-          provider: admin.provider,
-          ip: req.ip,
-          timestamp: new Date().toISOString(),
-          route: req.originalUrl,
-        }
-      );
+//     // if (admin.provider !== "local") {
+//     //   console.error(
+//     //     "[AdminEmailUpdateBlocked] Third-party auth user attempted to change email",
+//     //     {
+//     //       userId: admin._id?.toString(),
+//     //       emailAttempted: email,
+//     //       provider: admin.provider,
+//     //       ip: req.ip,
+//     //       timestamp: new Date().toISOString(),
+//     //       route: req.originalUrl,
+//     //     }
+//     //   );
 
-      return res
-        .status(400)
-        .json({ message: "Only local accounts can change email." });
-    }
+//     //   return res
+//     //     .status(400)
+//     //     .json({ message: "Only local accounts can change email." });
+//     // }
 
-    const exists = await Admin.findOne({ email: emailNormalized });
-    if (exists) {
-      console.error(
-        "[AdminEmailUpdateError] Email already in use by another account",
-        {
-          attemptedEmail: emailNormalized,
-          userId: admin._id?.toString(),
-          ip: req.ip,
-          timestamp: new Date().toISOString(),
-          route: req.originalUrl,
-        }
-      );
-      return res.status(400).json({ message: "This email is already in use." });
-    }
+//     const exists = await Admin.findOne({ email: emailNormalized });
+//     if (exists) {
+//       console.error(
+//         "[AdminEmailUpdateError] Email already in use by another account",
+//         {
+//           attemptedEmail: emailNormalized,
+//           userId: admin._id?.toString(),
+//           ip: req.ip,
+//           timestamp: new Date().toISOString(),
+//           route: req.originalUrl,
+//         }
+//       );
+//       return res.status(400).json({ message: "This email is already in use." });
+//     }
 
-    const isValidPassword = await bcrypt.compare(
-      current_password,
-      admin.password
-    );
-    if (!isValidPassword) {
-      console.error(
-        "[EmailChange][InvalidPassword] Password verification failed",
-        {
-          userId: admin._id?.toString(),
-          ip: req.ip,
-          timestamp: new Date().toISOString(),
-          route: req.originalUrl,
-        }
-      );
-      return res.status(401).json({ message: "Invalid password." });
-    }
+//     const isValidPassword = await bcrypt.compare(
+//       current_password,
+//       admin.password
+//     );
+//     if (!isValidPassword) {
+//       console.error(
+//         "[EmailChange][InvalidPassword] Password verification failed",
+//         {
+//           userId: admin._id?.toString(),
+//           ip: req.ip,
+//           timestamp: new Date().toISOString(),
+//           route: req.originalUrl,
+//         }
+//       );
+//       return res.status(401).json({ message: "Invalid password." });
+//     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-    const hashedCode = await bcrypt.hash(code, 10);
+//     const code = Math.floor(100000 + Math.random() * 900000).toString();
+//     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+//     const hashedCode = await bcrypt.hash(code, 10);
 
-    await Otp.deleteMany({ email: emailNormalized });
-    await new Otp({
-      email: emailNormalized,
-      code: hashedCode,
-      expiresAt,
-    }).save();
+//     await Otp.deleteMany({ email: emailNormalized });
+//     await new Otp({
+//       email: emailNormalized,
+//       code: hashedCode,
+//       expiresAt,
+//     }).save();
 
-    await sendEmail({
-      to: emailNormalized,
-      subject: "Email Change Verification (ExecStream)",
-      html: `<p>Your OTP to change email is <strong>${code}</strong>. It expires in 10 minutes.</p>`,
-    });
+//     await sendEmail({
+//       to: emailNormalized,
+//       subject: "Email Change Verification (ExecStream)",
+//       html: `<p>Your OTP to change email is <strong>${code}</strong>. It expires in 5 minutes.</p>`,
+//     });
 
-    console.log(
-      `[EmailChange][OTP Sent] to ${emailNormalized} for adminId: ${admin._id}`
-    );
-    return res.status(200).json({ message: "OTP sent to new email." });
-  } catch (err) {
-    console.error("[EmailChange][Error requesting change]", err);
-    return res.status(500).json({ message: "Failed to send OTP." });
-  }
-};
+//     console.log(
+//       `[EmailChange][OTP Sent] to ${emailNormalized} for adminId: ${admin._id}`
+//     );
+//     return res.status(200).json({ message: "OTP sent to new email." });
+//   } catch (err) {
+//     console.error("[EmailChange][Error requesting change]", err);
+//     return res.status(500).json({ message: "Failed to send OTP." });
+//   }
+// };
 
-export const verifyEmailChange = async (req, res) => {
-  const { new_email, otp } = req.body;
+// export const verifyEmailChange = async (req, res) => {
+//   const { new_email, otp } = req.body;
 
-  if (!new_email || !otp) {
-    return res
-      .status(400)
-      .json({ message: "Both new email and OTP are required." });
-  }
+//   if (!new_email || !otp) {
+//     return res
+//       .status(400)
+//       .json({ message: "Both new email and OTP are required." });
+//   }
 
-  const emailNormalized = new_email.toLowerCase();
+//   const emailNormalized = new_email.toLowerCase();
 
-  console.log("[VerifyEmailChange] Update email for: ", req.user.id);
+//   console.log("[VerifyEmailChange] Update email for: ", req.user.id);
 
-  try {
-    const admin = await Admin.findOne({
-      _id: req.user.id,
-      isDeleted: false,
-    }).select("-password");
-    if (!admin) {
-      console.error("Admin not found");
-      return res.status(404).json({ message: "Admin not found." });
-    }
+//   try {
+//     const admin = await Admin.findOne({
+//       _id: req.user.id,
+//       isDeleted: false,
+//     }).select("-password");
+//     if (!admin) {
+//       console.error("Admin not found");
+//       return res.status(404).json({ message: "Admin not found." });
+//     }
 
-    if (admin.provider !== "local") {
-      console.error(
-        "[AdminEmailUpdateBlocked] Third-party auth user attempted to change email",
-        {
-          userId: admin._id?.toString(),
-          emailAttempted: email,
-          provider: admin.provider,
-          ip: req.ip,
-          timestamp: new Date().toISOString(),
-          route: req.originalUrl,
-        }
-      );
+//     // if (admin.provider !== "local") {
+//     //   console.error(
+//     //     "[AdminEmailUpdateBlocked] Third-party auth user attempted to change email",
+//     //     {
+//     //       userId: admin._id?.toString(),
+//     //       emailAttempted: email,
+//     //       provider: admin.provider,
+//     //       ip: req.ip,
+//     //       timestamp: new Date().toISOString(),
+//     //       route: req.originalUrl,
+//     //     }
+//     //   );
 
-      return res
-        .status(400)
-        .json({ message: "Only local accounts can change email." });
-    }
+//     //   return res
+//     //     .status(400)
+//     //     .json({ message: "Only local accounts can change email." });
+//     // }
 
-    const otpRecord = await Otp.findOne({ email: emailNormalized });
-    if (!otpRecord) {
-      console.error("[OTPVerificationError] No OTP record found for email", {
-        attemptedEmail: emailNormalized,
-        userId: admin._id?.toString(),
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-        route: req.originalUrl,
-      });
-      return res.status(400).json({ message: "No OTP found for this email." });
-    }
+//     const otpRecord = await Otp.findOne({ email: emailNormalized });
+//     if (!otpRecord) {
+//       console.error("[OTPVerificationError] No OTP record found for email", {
+//         attemptedEmail: emailNormalized,
+//         userId: admin._id?.toString(),
+//         ip: req.ip,
+//         timestamp: new Date().toISOString(),
+//         route: req.originalUrl,
+//       });
+//       return res.status(400).json({ message: "No OTP found for this email." });
+//     }
 
-    if (otpRecord.expiresAt < Date.now()) {
-      console.error("[OTPExpired] OTP has expired", {
-        email: emailNormalized,
-        expiresAt: otpRecord.expiresAt,
-        currentTime: new Date().toISOString(),
-        ip: req.ip,
-        route: req.originalUrl,
-      });
-      await otpRecord.deleteOne();
-      return res.status(400).json({ message: "OTP has expired." });
-    }
+//     if (otpRecord.expiresAt < Date.now()) {
+//       console.error("[OTPExpired] OTP has expired", {
+//         email: emailNormalized,
+//         expiresAt: otpRecord.expiresAt,
+//         currentTime: new Date().toISOString(),
+//         ip: req.ip,
+//         route: req.originalUrl,
+//       });
+//       await otpRecord.deleteOne();
+//       return res.status(400).json({ message: "OTP has expired." });
+//     }
 
-    const isMatch = await bcrypt.compare(otp, otpRecord.code);
-    if (!isMatch) {
-      console.error("[OTPInvalid] Entered OTP did not match stored OTP", {
-        email: emailNormalized,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-        route: req.originalUrl,
-      });
-      return res.status(400).json({ message: "Invalid OTP." });
-    }
+//     const isMatch = await bcrypt.compare(otp, otpRecord.code);
+//     if (!isMatch) {
+//       console.error("[OTPInvalid] Entered OTP did not match stored OTP", {
+//         email: emailNormalized,
+//         ip: req.ip,
+//         timestamp: new Date().toISOString(),
+//         route: req.originalUrl,
+//       });
+//       return res.status(400).json({ message: "Invalid OTP." });
+//     }
 
-    const alreadyTaken = await Admin.findOne({ email: emailNormalized });
-    if (alreadyTaken) {
-      console.error(
-        "[EmailAlreadyInUse] Attempted email is already registered",
-        {
-          email: emailNormalized,
-          userId: req.user?.id || null,
-          ip: req.ip,
-          timestamp: new Date().toISOString(),
-          route: req.originalUrl,
-        }
-      );
-      return res.status(400).json({ message: "This email is already in use." });
-    }
+//     const alreadyTaken = await Admin.findOne({ email: emailNormalized });
+//     if (alreadyTaken) {
+//       console.error(
+//         "[EmailAlreadyInUse] Attempted email is already registered",
+//         {
+//           email: emailNormalized,
+//           userId: req.user?.id || null,
+//           ip: req.ip,
+//           timestamp: new Date().toISOString(),
+//           route: req.originalUrl,
+//         }
+//       );
+//       return res.status(400).json({ message: "This email is already in use." });
+//     }
 
-    admin.email = emailNormalized;
-    await admin.save();
-    await otpRecord.deleteOne();
+//     admin.email = emailNormalized;
+//     await admin.save();
+//     await otpRecord.deleteOne();
 
-    console.log(
-      `[EmailChange][Success] Updated email to ${emailNormalized} for adminId: ${admin._id}`
-    );
+//     console.log(
+//       `[EmailChange][Success] Updated email to ${emailNormalized} for adminId: ${admin._id}`
+//     );
 
-    return res.status(200).json({
-      message: "Email updated successfully.",
-      admin: sanitizeAdmin(admin),
-    });
-  } catch (err) {
-    console.error("[EmailChange][Verification Error]", err);
-    return res
-      .status(500)
-      .json({ message: "Failed to verify and update email." });
-  }
-};
+//     return res.status(200).json({
+//       message: "Email updated successfully.",
+//       admin: sanitizeAdmin(admin),
+//     });
+//   } catch (err) {
+//     console.error("[EmailChange][Verification Error]", err);
+//     return res
+//       .status(500)
+//       .json({ message: "Failed to verify and update email." });
+//   }
+// };
 
-export const deleteAdmin = async (req, res) => {
-  const { id } = req.params;
-  const { password } = req.body;
+// export const deleteAdmin = async (req, res) => {
+//   const { id } = req.params;
+//   const { password } = req.body;
 
-  if (!id || !password) {
-    console.error(
-      "[AdminProfileDeleteError] Both id parameter and password field are required",
-      {
-        requestId: req.id || null,
-        userId: req.user?.id || null,
-        timestamp: new Date().toISOString(),
-        ip: req.ip,
-      }
-    );
+//   if (!id || !password) {
+//     console.error(
+//       "[AdminProfileDeleteError] Both id parameter and password field are required",
+//       {
+//         requestId: req.id || null,
+//         userId: req.user?.id || null,
+//         timestamp: new Date().toISOString(),
+//         ip: req.ip,
+//       }
+//     );
 
-    return res.status(400).json({
-      message: "id parameter must be provided.",
-    });
-  }
+//     return res.status(400).json({
+//       message: "id parameter must be provided.",
+//     });
+//   }
 
-  console.log("[DeleteAdminRequest] Deleting Admin with id: ", id);
+//   console.log("[DeleteAdminRequest] Deleting Admin with id: ", id);
 
-  try {
-    const admin = await Admin.findById(id);
+//   try {
+//     const admin = await Admin.findById(id);
 
-    if (!admin) {
-      console.error("[DeleteAdminError] Admin not found", {
-        adminId: id,
-        requestedBy: req.user?.id,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-      });
-      return res.status(404).json({ message: "Admin not found." });
-    }
+//     if (!admin) {
+//       console.error("[DeleteAdminError] Admin not found", {
+//         adminId: id,
+//         requestedBy: req.user?.id,
+//         ip: req.ip,
+//         timestamp: new Date().toISOString(),
+//       });
+//       return res.status(404).json({ message: "Admin not found." });
+//     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      console.error("[LoginError] Credential mismatch", {
-        userId: admin._id?.toString(),
-        attemptedEmail: admin.email,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-        route: req.originalUrl,
-      });
-      return res.status(401).json({ message: "Invalid credentials." });
-    }
+//     const isMatch = await bcrypt.compare(password, admin.password);
+//     if (!isMatch) {
+//       console.error("[LoginError] Credential mismatch", {
+//         userId: admin._id?.toString(),
+//         attemptedEmail: admin.email,
+//         ip: req.ip,
+//         timestamp: new Date().toISOString(),
+//         route: req.originalUrl,
+//       });
+//       return res.status(401).json({ message: "Invalid credentials." });
+//     }
 
-    if (admin.role === "superAdmin") {
-      console.error("[DeleteAdminBlocked] Attempt to delete superAdmin", {
-        targetAdminId: id,
-        requestedBy: req.user?.id,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-      });
-      return res
-        .status(403)
-        .json({ message: "Cannot delete superAdmin account." });
-    }
+//     if (admin.role === "superAdmin") {
+//       console.error("[DeleteAdminBlocked] Attempt to delete superAdmin", {
+//         targetAdminId: id,
+//         requestedBy: req.user?.id,
+//         ip: req.ip,
+//         timestamp: new Date().toISOString(),
+//       });
+//       return res
+//         .status(403)
+//         .json({ message: "Cannot delete superAdmin account." });
+//     }
 
-    if (admin.isDeleted) {
-      console.error("[DeleteAdminInvalid] Admin already marked for deletion", {
-        targetAdminId: id,
-        requestedBy: req.user?.id,
-        ip: req.ip,
-        timestamp: new Date().toISOString(),
-      });
-      return res
-        .status(400)
-        .json({ message: "Admin is already marked for deletion." });
-    }
+//     if (admin.isDeleted) {
+//       console.error("[DeleteAdminInvalid] Admin already marked for deletion", {
+//         targetAdminId: id,
+//         requestedBy: req.user?.id,
+//         ip: req.ip,
+//         timestamp: new Date().toISOString(),
+//       });
+//       return res
+//         .status(400)
+//         .json({ message: "Admin is already marked for deletion." });
+//     }
 
-    admin.isDeleted = true;
-    admin.deletedAt = new Date();
-    await admin.save();
+//     admin.isDeleted = true;
+//     admin.deletedAt = new Date();
+//     await admin.save();
 
-    await sendEmail({
-      to: admin.email,
-      subject: "ExecStream Account Deletion Initiated",
-      html: `
-    <p>Hello ${admin.name},</p>
-    <p>Your account on <strong>ExecStream</strong> has been marked for deletion.</p>
-    <p>If this was a mistake or you want to reactivate your account, please <strong>log in within the next 30 days</strong>.</p>
-    <p>After that, your account will be permanently deleted.</p>
-    <br>
-    <p>Regards,<br>ExecStream Team</p>
-  `,
-    });
+//     await sendEmail({
+//       to: admin.email,
+//       subject: "ExecStream Account Deletion Initiated",
+//       html: `
+//     <p>Hello ${admin.name},</p>
+//     <p>Your account on <strong>ExecStream</strong> has been marked for deletion.</p>
+//     <p>If this was a mistake or you want to reactivate your account, please <strong>log in within the next 30 days</strong>.</p>
+//     <p>After that, your account will be permanently deleted.</p>
+//     <br>
+//     <p>Regards,<br>ExecStream Team</p>
+//   `,
+//     });
 
-    console.log("Admin marked for deletion.");
+//     console.log("Admin marked for deletion.");
 
-    res.status(200).json({
-      message:
-        "Admin marked for deletion. Will be permanently removed in 30 days if not reactivated.",
-    });
-  } catch (err) {
-    console.error("[DeleteAdminError] Failed to delete admin: ", err);
-    res.status(500).json({ message: "Failed to delete admin." });
-  }
-};
+//     res.status(200).json({
+//       message:
+//         "Admin marked for deletion. Will be permanently removed in 30 days if not reactivated.",
+//     });
+//   } catch (err) {
+//     console.error("[DeleteAdminError] Failed to delete admin: ", err);
+//     res.status(500).json({ message: "Failed to delete admin." });
+//   }
+// };
 
 export const changePassword = async (req, res) => {
   console.log("[ChangePassword] Request received for user ID:", req.user?.id);
@@ -658,7 +687,7 @@ export const changePassword = async (req, res) => {
       return res.status(400).json({ message: passwordError });
     }
 
-    const admin = await Admin.findOne({ _id: req.user.id, isDeleted: false });
+    const admin = await Admin.findOne({ _id: req.user.id });
     if (!admin) {
       console.warn("[ChangePassword] Admin not found", {
         userId: req.user?.id,
@@ -666,15 +695,15 @@ export const changePassword = async (req, res) => {
       return res.status(404).json({ message: "Admin not found." });
     }
 
-    if (admin.provider !== "local") {
-      console.warn("[ChangePassword] Not allowed for third-party auth users", {
-        userId: admin._id,
-        provider: admin.provider,
-      });
-      return res.status(400).json({
-        message: "Password change is only allowed for local accounts.",
-      });
-    }
+    // if (admin.provider !== "local") {
+    //   console.warn("[ChangePassword] Not allowed for third-party auth users", {
+    //     userId: admin._id,
+    //     provider: admin.provider,
+    //   });
+    //   return res.status(400).json({
+    //     message: "Password change is only allowed for local accounts.",
+    //   });
+    // }
 
     const valid = await bcrypt.compare(old_password, admin.password);
     if (!valid) {
@@ -739,8 +768,8 @@ export const sendOtp = async (req, res) => {
     }).save();
     await sendEmail({
       to: emailNormalized,
-      subject: "Your ExecStream OTP for registration",
-      html: `<p>Your OTP for registration is <strong>${code}</strong>. It expires in 10 minutes.</p>`,
+      subject: "Your ExecStream OTP for login",
+      html: `<p>Your OTP for login is <strong>${code}</strong>. It expires in 10 minutes.</p>`,
     });
 
     console.log("Email sent with OTP to:", emailNormalized);
@@ -768,25 +797,26 @@ export const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "No account with that email." });
     }
 
-    if (admin.provider === "google") {
-      console.log(
-        "Password reset attempt for Google account(not applicable):",
-        email
-      );
-      return res.status(400).json({
-        message:
-          "This account uses Google sign-in. Please use the 'Sign in with Google' button instead.",
-      });
-    } else if (admin.provider === "linkedin") {
-      console.log(
-        "Password reset attempt for linkedIn account(not applicable):",
-        email
-      );
-      return res.status(400).json({
-        message:
-          "This account uses LinkedIn sign-in. Please use the 'Sign in with LinkedIn' button instead.",
-      });
-    }
+    // if (admin.provider === "google") {
+    //   console.log(
+    //     "Password reset attempt for Google account(not applicable):",
+    //     email
+    //   );
+    //   return res.status(400).json({
+    //     message:
+    //       "This account uses Google sign-in. Please use the 'Sign in with Google' button instead.",
+    //   });
+    // }
+    // else if (admin.provider === "linkedin") {
+    //   console.log(
+    //     "Password reset attempt for linkedIn account(not applicable):",
+    //     email
+    //   );
+    //   return res.status(400).json({
+    //     message:
+    //       "This account uses LinkedIn sign-in. Please use the 'Sign in with LinkedIn' button instead.",
+    //   });
+    // }
 
     const token = crypto.randomBytes(20).toString("hex");
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
@@ -891,6 +921,8 @@ export const logout = async (req, res) => {
       sameSite: config.IS_PRODUCTION ? "none" : "strict",
     });
 
+    console.log("logged out");
+
     res.status(200).json({ message: "Logged out successfully" });
   } catch (err) {
     console.error("Logout error:", err);
@@ -898,120 +930,120 @@ export const logout = async (req, res) => {
   }
 };
 
-export const googleCallback = async (req, res) => {
-  console.log("Google Callback function: ", req.user);
+// export const googleCallback = async (req, res) => {
+//   console.log("Google Callback function: ", req.user);
 
-  try {
-    const user = req.user;
+//   try {
+//     const user = req.user;
 
-    if (!user) {
-      return res.redirect(`${config.CLIENT_URL}/login?error=auth_failed`);
-    }
+//     if (!user) {
+//       return res.redirect(`${config.CLIENT_URL}/login?error=auth_failed`);
+//     }
 
-    if (!user.isNew) {
-      res.clearCookie("signup_role", {
-        httpOnly: false,
-      });
-      const token = await generateToken(user, res);
-      console.log("Generated token for existing Google user:", token);
-      return res.redirect(`${config.CLIENT_URL}/`);
-    }
+//     if (!user.isNew) {
+//       res.clearCookie("signup_role", {
+//         httpOnly: false,
+//       });
+//       const token = await generateToken(user, res);
+//       console.log("Generated token for existing Google user:", token);
+//       return res.redirect(`${config.CLIENT_URL}/`);
+//     }
 
-    const name = user.profile.displayName;
-    const googleId = user.profile.id;
-    const email = user.profile.emails[0].value;
-    const role = req.cookies.signup_role;
-    const allowedRoles = [
-      "superAdmin",
-      "editor",
-      "newsletterAdmin",
-      "eventAdmin",
-    ];
+//     const name = user.profile.displayName;
+//     const googleId = user.profile.id;
+//     const email = user.profile.emails[0].value;
+//     const role = req.cookies.signup_role;
+//     const allowedRoles = [
+//       "superAdmin",
+//       "editor",
+//       "newsletterAdmin",
+//       "eventAdmin",
+//     ];
 
-    if (!role || !allowedRoles.includes(role)) {
-      console.error("Invalid or missing role during Google signup:", role);
-      return res.redirect(
-        `${config.CLIENT_URL}/login?error=missing_or_invalid_role`
-      );
-    }
-    const admin = new Admin({
-      name,
-      email,
-      role,
-      provider: "google",
-      googleId,
-    });
-    await admin.save();
+//     if (!role || !allowedRoles.includes(role)) {
+//       console.error("Invalid or missing role during Google signup:", role);
+//       return res.redirect(
+//         `${config.CLIENT_URL}/login?error=missing_or_invalid_role`
+//       );
+//     }
+//     const admin = new Admin({
+//       name,
+//       email,
+//       role,
+//       provider: "google",
+//       googleId,
+//     });
+//     await admin.save();
 
-    await generateToken(admin, res);
-    res.clearCookie("signup_role", {
-      httpOnly: false,
-    });
+//     await generateToken(admin, res);
+//     res.clearCookie("signup_role", {
+//       httpOnly: false,
+//     });
 
-    console.log("New Google user registered:", email);
+//     console.log("New Google user registered:", email);
 
-    return res.redirect(`${config.CLIENT_URL}/`);
-  } catch (error) {
-    console.error("Google callback error:", error);
-    return res.redirect(`${config.CLIENT_URL}/login?error=callback_failed`);
-  }
-};
+//     return res.redirect(`${config.CLIENT_URL}/`);
+//   } catch (error) {
+//     console.error("Google callback error:", error);
+//     return res.redirect(`${config.CLIENT_URL}/login?error=callback_failed`);
+//   }
+// };
 
-export const linkedinCallback = async (req, res) => {
-  console.log("LinkedIn Callback function: ", req.user);
+// export const linkedinCallback = async (req, res) => {
+//   console.log("LinkedIn Callback function: ", req.user);
 
-  try {
-    const user = req.user;
+//   try {
+//     const user = req.user;
 
-    if (!user) {
-      return res.redirect(`${config.CLIENT_URL}/login?error=auth_failed`);
-    }
+//     if (!user) {
+//       return res.redirect(`${config.CLIENT_URL}/login?error=auth_failed`);
+//     }
 
-    if (!user.isNew) {
-      res.clearCookie("signup_role", {
-        httpOnly: false,
-      });
-      const token = await generateToken(user, res);
-      console.log("Generated token for existing LinkedIn user:", token);
-      return res.redirect(`${config.CLIENT_URL}/`);
-    }
+//     if (!user.isNew) {
+//       res.clearCookie("signup_role", {
+//         httpOnly: false,
+//       });
+//       const token = await generateToken(user, res);
+//       console.log("Generated token for existing LinkedIn user:", token);
+//       return res.redirect(`${config.CLIENT_URL}/`);
+//     }
 
-    const name = user.profile.displayName;
-    const linkedinId = user.profile.id;
-    const email = user.profile.emails[0].value;
-    const role = req.cookies.signup_role;
+//     const name = user.profile.displayName;
+//     const linkedinId = user.profile.id;
+//     const email = user.profile.emails[0].value;
+//     const role = req.cookies.signup_role;
 
-    const allowedRoles = [
-      "superAdmin",
-      "editor",
-      "newsletterAdmin",
-      "eventAdmin",
-    ];
-    if (!role || !allowedRoles.includes(role)) {
-      console.error("Invalid or missing role during LinkedIn signup:", role);
-      return res.redirect(
-        `${config.CLIENT_URL}/login?error=missing_or_invalid_role`
-      );
-    }
+//     const allowedRoles = [
+//       "superAdmin",
+//       "editor",
+//       "newsletterAdmin",
+//       "eventAdmin",
+//     ];
+//     if (!role || !allowedRoles.includes(role)) {
+//       console.error("Invalid or missing role during LinkedIn signup:", role);
+//       return res.redirect(
+//         `${config.CLIENT_URL}/login?error=missing_or_invalid_role`
+//       );
+//     }
 
-    const admin = new Admin({
-      name,
-      email,
-      role,
-      provider: "linkedin",
-      linkedinId,
-    });
-    await admin.save();
+//     const admin = new Admin({
+//       name,
+//       email,
+//       role,
+//       provider: "linkedin",
+//       linkedinId,
+//     });
+//     await admin.save();
 
-    await generateToken(admin, res);
-    res.clearCookie("signup_role", {
-      httpOnly: false,
-    });
+//     await generateToken(admin, res);
+//     res.clearCookie("signup_role", {
+//       httpOnly: false,
+//     });
 
-    console.log("New LinkedIn user registered:", email);
-    return res.redirect(`${config.CLIENT_URL}/`);
-  } catch (error) {
-    console.error("LinkedIn callback error:", error);
-    return res.redirect(`${config.CLIENT_URL}/login?error=callback_failed`);
-  }
-};
+//     console.log("New LinkedIn user registered:", email);
+//     return res.redirect(`${config.CLIENT_URL}/`);
+//   } catch (error) {
+//     console.error("LinkedIn callback error:", error);
+//     return res.redirect(`${config.CLIENT_URL}/login?error=callback_failed`);
+//   }
+// };

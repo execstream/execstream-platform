@@ -75,15 +75,15 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 
 ### Public Endpoints (No Auth Required)
 
-- POST /api/v1/auth/register
+<!-- - POST /api/v1/auth/register -->
 - POST /api/v1/auth/login
 - POST /api/v1/auth/send-otp
 - POST /api/v1/auth/forgot-password
 - POST /api/v1/auth/reset-password/:token
-- GET /api/v1/auth/google
+<!-- - GET /api/v1/auth/google
 - GET /api/v1/auth/google/callback
 - GET /api/v1/auth/linkedin
-- GET /api/v1/auth/linkedin/callback
+- GET /api/v1/auth/linkedin/callback -->
 - GET /api/v1/content/all (optional auth)
 - GET /api/v1/content/slug/:slug
 - GET /api/v1/content/flags/all
@@ -99,14 +99,14 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - POST /api/v1/auth/logout
 - GET /api/v1/auth/me
 - PUT /api/v1/auth/me/update
-- POST /api/v1/auth/change-email/request
-- POST /api/v1/auth/change-email/verify
+<!-- - POST /api/v1/auth/change-email/request
+- POST /api/v1/auth/change-email/verify -->
 - PUT /api/v1/auth/change-password
 - GET /api/v1/auth/check
 
 ### Role-Based Endpoints (superAdmin/editor)
 
-- DELETE /api/v1/auth/:id
+<!-- - DELETE /api/v1/auth/:id -->
 - PUT /api/v1/auth/admins/update-role/:id
 - GET /api/v1/auth/admins/all
 - GET /api/v1/content/get/:id
@@ -196,7 +196,7 @@ _✅ Response:_
 
 ---
 
-### 📝 Register
+<!-- ### 📝 Register
 
 **POST /api/v1/auth/register** 🌐 _Public_
 
@@ -232,7 +232,7 @@ _✅ Response:_
 }
 ```
 
----
+--- -->
 
 ### 📧 Send OTP
 
@@ -343,7 +343,7 @@ _✅ Response:_
 
 ---
 
-### 🔗 Google OAuth
+<!-- ### 🔗 Google OAuth
 
 **GET /api/v1/auth/google** 🌐 _Public_
 
@@ -387,7 +387,7 @@ _Query Parameters:_ role=editor (optional - used to set a cookie for signup role
 
 ---
 
-### 💼 LinkedIn OAuth Callback
+### 💼 LinkedIn OAuth Callback -->
 
 **GET /api/v1/auth/linkedin/callback** 🌐 _Public_
 
@@ -435,7 +435,7 @@ _✅ Response:_
 
 ---
 
-### 📧 Request Email Change
+<!-- ### 📧 Request Email Change
 
 **POST /api/v1/auth/change-email/request** 🔒 _Requires Authentication_
 
@@ -488,7 +488,7 @@ _✅ Response:_
 }
 ```
 
----
+--- -->
 
 ### 🔐 Change Password
 
@@ -513,7 +513,7 @@ _✅ Response:_
 
 ---
 
-### 🗑 Soft Delete Admin
+<!-- ### 🗑 Soft Delete Admin -->
 
 **DELETE /api/v1/auth/\:id** 🔒👑 _Requires Authentication + Role_ (superAdmin)
 

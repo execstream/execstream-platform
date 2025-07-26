@@ -15,7 +15,6 @@ const authOptionalMiddleware = async (req, res, next) => {
 
     const user = await Admin.findOne({
       _id: decoded.id,
-      isDeleted: false,
     }).select("-password");
     if (!user) {
       console.warn("No user found for token ID:", decoded.id);
