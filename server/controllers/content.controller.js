@@ -25,15 +25,24 @@ export const listAll = async (req, res) => {
       search,
       exec_role_id,
       series_id,
+      theme_id,
+      sub_theme_id,
+      industry_id,
     } = req.query;
 
     const pageNum = Number(page);
     const limitNum = Math.min(Number(limit), 100);
 
-    let warning = null;
-    if (Number(limit) > 100) {
-      warning = "Limit capped to 100 items max per page.";
-    }
+    const addTagFilter = (queryParam, fieldName, filterObj) => {
+      if (!queryParam) return;
+      const ids = queryParam.split(",").map((id) => id.trim());
+      for (const id of ids) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+          throw new Error(`Invalid ID format provided for ${fieldName}.`);
+        }
+      }
+      filterObj[fieldName] = { $in: ids };
+    };
 
     const filter = {};
     const isAdmin =
@@ -44,23 +53,19 @@ export const listAll = async (req, res) => {
     if (content_type) {
       const typeError = validateContentType(content_type);
       if (typeError) {
-        return res.status(400).json({ message: typeError });
+        throw new Error(typeError);
       }
       filter.content_type = content_type;
     }
 
-    if (exec_role_id) {
-      if (!mongoose.Types.ObjectId.isValid(exec_role_id)) {
-        return res
-          .status(400)
-          .json({ message: "Invalid exec_role_id format." });
-      }
-      filter.exec_role_ids = exec_role_id;
-    }
+    addTagFilter(theme_id, "theme_ids", filter);
+    addTagFilter(sub_theme_id, "sub_theme_ids", filter);
+    addTagFilter(industry_id, "industry_ids", filter);
+    addTagFilter(exec_role_id, "exec_role_ids", filter);
 
     if (series_id) {
       if (!mongoose.Types.ObjectId.isValid(series_id)) {
-        return res.status(400).json({ message: "Invalid series_id format." });
+        throw new Error("Invalid series_id format.");
       }
       filter.series_id = series_id;
     }
@@ -72,12 +77,12 @@ export const listAll = async (req, res) => {
     const [sortField, sortOrder] = sort.split(":");
     const sortFieldError = validateSortField(sortField);
     if (sortFieldError) {
-      return res.status(400).json({ message: sortFieldError });
+      throw new Error(sortFieldError);
     }
 
     const sortOrderError = validateSortOrder(sortOrder);
     if (sortOrderError) {
-      return res.status(400).json({ message: sortOrderError });
+      throw new Error(sortOrderError);
     }
     const sortOptions = { [sortField]: sortOrder === "asc" ? 1 : -1 };
 
@@ -119,17 +124,24 @@ export const listAll = async (req, res) => {
 
     console.log("Contents fetched successfully");
 
-    res.json({
+    const response = {
       message: "Contents fetched successfully",
       currentPage: pageNum,
       totalPages: Math.ceil(total / limitNum),
       totalItems: total,
       contents,
-      ...(warning && { warning }),
-    });
+    };
+
+    if (Number(limit) > 100) {
+      response.warning = "Limit capped to 100 items max per page.";
+    }
+
+    res.status(200).json(response);
   } catch (err) {
     console.error("Error fetching paginated content:", err);
-    res.status(500).json({ message: "Error fetching paginated content" });
+    res
+      .status(400)
+      .json({ message: err.message || "Error fetching paginated content" });
   }
 };
 

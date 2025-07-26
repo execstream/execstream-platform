@@ -3,15 +3,6 @@ import HomeExpert from "../models/HomeExpert.js";
 import PartnerCompany from "../models/PartnerCompany.js";
 import { deleteFromCloudinary } from "../helpers/cloudinary.helpers.js";
 
-// PUBLIC CONTROLLERS
-// ===================================
-
-/**
- * Factory function to create a "get active items" controller for public-facing routes.
- * @param {mongoose.Model} Model - The Mongoose model to query.
- * @param {string} resourceName - The plural name of the resource (e.g., "banners").
- * @returns {Function} An Express controller function.
- */
 const getActiveItemsFactory = (Model, resourceName) => async (req, res) => {
   try {
     const items = await Model.find({ is_active: true })
@@ -29,14 +20,6 @@ const getActiveItemsFactory = (Model, resourceName) => async (req, res) => {
   }
 };
 
-// ADMIN CONTROLLERS
-// ===================================
-
-// --- Event Banners ---
-
-/**
- * @desc    Add a new event banner
- */
 export const addBanner = async (req, res) => {
   const { caption, link, is_active, order } = req.body;
   const imageUrl = req.uploadResults?.event_banner_image_url;
@@ -64,11 +47,6 @@ export const addBanner = async (req, res) => {
   }
 };
 
-// --- Home Experts ---
-
-/**
- * @desc    Add a new expert
- */
 export const addExpert = async (req, res) => {
   const { name, job_position, company_name, is_active, order } = req.body;
   const profileImageUrl = req.uploadResults?.expert_profile_image_url;
@@ -99,9 +77,6 @@ export const addExpert = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update an expert
- */
 export const updateExpert = async (req, res) => {
   try {
     const expert = await HomeExpert.findById(req.params.id);
@@ -146,11 +121,6 @@ export const updateExpert = async (req, res) => {
   }
 };
 
-// --- Partner Companies ---
-
-/**
- * @desc    Add a new partner
- */
 export const addPartner = async (req, res) => {
   const { company_name, link, order, is_active } = req.body;
   const logoUrl = req.uploadResults?.partner_company_logo_image_url;
@@ -178,13 +148,6 @@ export const addPartner = async (req, res) => {
   }
 };
 
-/**
- * Factory function to create a "delete" controller.
- * @param {mongoose.Model} Model - The Mongoose model to delete from.
- * @param {string} resourceName - The singular name of the resource (e.g., "banner").
- * @param {string} imageUrlField - The name of the field holding the image URL (e.g., "image_url").
- * @returns {Function} An Express controller function.
- */
 const deleteItemFactory =
   (Model, resourceName, imageUrlField) => async (req, res) => {
     try {
@@ -212,12 +175,6 @@ const deleteItemFactory =
     }
   };
 
-/**
- * Factory function to create a "getAll" controller for admin panels.
- * @param {mongoose.Model} Model - The Mongoose model to query.
- * @param {string} resourceName - The plural name of the resource (e.g., "banners").
- * @returns {Function} An Express controller function.
- */
 const getAllForAdminFactory = (Model, resourceName) => async (req, res) => {
   try {
     const items = await Model.find({})
@@ -234,12 +191,6 @@ const getAllForAdminFactory = (Model, resourceName) => async (req, res) => {
   }
 };
 
-/**
- * Factory function to create a "toggleStatus" controller.
- * @param {mongoose.Model} Model - The Mongoose model to update.
- * @param {string} resourceName - The singular name of the resource (e.g., "banner").
- * @returns {Function} An Express controller function.
- */
 const toggleStatusFactory = (Model, resourceName) => async (req, res) => {
   try {
     const item = await Model.findById(req.params.id);

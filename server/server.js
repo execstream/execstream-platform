@@ -13,8 +13,6 @@ import authRoutes from "./routes/auth.routes.js";
 import webConfigRoutes from "./routes/webconfig.routes.js";
 import seriesRoutes from "./routes/series.routes.js";
 import contributorRoutes from "./routes/contributor.routes.js";
-// import passport from "passport";
-// import "./configs/passport.js";
 import { globalIpRateLimiter } from "./utils/rateLimiters.js";
 import { config, getConfigStatus } from "./configs/env.js";
 import { startScheduler } from "./configs/cron.js";
@@ -36,8 +34,6 @@ app.use((req, res, next) => {
   if (req.path === config.HEALTH_CHECK_PATH) return next();
   return globalIpRateLimiter(req, res, next);
 });
-
-// app.use(passport.initialize());
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/content", contentRoutes);

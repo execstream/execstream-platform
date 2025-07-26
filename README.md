@@ -75,19 +75,18 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 
 ### Public Endpoints (No Auth Required)
 
-<!-- - POST /api/v1/auth/register -->
 - POST /api/v1/auth/login
 - POST /api/v1/auth/send-otp
 - POST /api/v1/auth/forgot-password
 - POST /api/v1/auth/reset-password/:token
-<!-- - GET /api/v1/auth/google
-- GET /api/v1/auth/google/callback
-- GET /api/v1/auth/linkedin
-- GET /api/v1/auth/linkedin/callback -->
 - GET /api/v1/content/all (optional auth)
 - GET /api/v1/content/slug/:slug
 - GET /api/v1/content/flags/all
 - POST /api/v1/newsletter/subscribe
+- GET /api/v1/tags/themes/all
+- GET /api/v1/tags/sub-themes/all
+- GET /api/v1/tags/industries/all
+- GET /api/v1/tags/roles/all
 - GET /api/v1/series/all
 - GET /api/v1/series/slug/:slug
 - GET /api/v1/webconfig/event-banners/all
@@ -99,14 +98,11 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - POST /api/v1/auth/logout
 - GET /api/v1/auth/me
 - PUT /api/v1/auth/me/update
-<!-- - POST /api/v1/auth/change-email/request
-- POST /api/v1/auth/change-email/verify -->
 - PUT /api/v1/auth/change-password
 - GET /api/v1/auth/check
 
 ### Role-Based Endpoints (superAdmin/editor)
 
-<!-- - DELETE /api/v1/auth/:id -->
 - PUT /api/v1/auth/admins/update-role/:id
 - GET /api/v1/auth/admins/all
 - GET /api/v1/content/get/:id
@@ -118,19 +114,19 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - POST /api/v1/content/add/:contentId/contributors
 - PATCH /api/v1/content/update/:contentId/contributors/:contributorSubId
 - DELETE /api/v1/content/delete/:contentId/contributors/:contributorSubId
-- GET /api/v1/tags/themes/all
+- GET /api/v1/tags/themes/usage/:id
+- GET /api/v1/tags/sub-themes/usage/:id
+- GET /api/v1/tags/industries/usage/:id
+- GET /api/v1/tags/roles/usage/:id
 - POST /api/v1/tags/themes/new
 - PUT /api/v1/tags/themes/update/:id
 - DELETE /api/v1/tags/themes/delete/:id
-- GET /api/v1/tags/sub-themes/all
 - POST /api/v1/tags/sub-themes/new
 - PUT /api/v1/tags/sub-themes/update/:id
 - DELETE /api/v1/tags/sub-themes/delete/:id
-- GET /api/v1/tags/industries/all
 - POST /api/v1/tags/industries/new
 - PUT /api/v1/tags/industries/update/:id
 - DELETE /api/v1/tags/industries/delete/:id
-- GET /api/v1/tags/roles/all
 - POST /api/v1/tags/roles/new
 - PUT /api/v1/tags/roles/update/:id
 - DELETE /api/v1/tags/roles/delete/:id
@@ -143,6 +139,7 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - PATCH /api/v1/series/update/:id
 - DELETE /api/v1/series/delete/:id
 - GET /api/v1/series/get/:id
+- GET /api/v1/series/usage/:id
 - POST /api/v1/webconfig/event-banners/new
 - GET /api/v1/webconfig/event-banners/all-admin
 - PATCH /api/v1/webconfig/event-banners/toggle-active/:id
@@ -195,44 +192,6 @@ _✅ Response:_
 ```
 
 ---
-
-<!-- ### 📝 Register
-
-**POST /api/v1/auth/register** 🌐 _Public_
-
-_Request Body:_
-
-```json
-{
-  "name": "New User",
-  "email": "newuser@example.com",
-  "password": "password123",
-  "otp": "123456",
-  "role": "editor"
-}
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "Admin registered successfully",
-  "admin": {
-    "_id": "6832af7e0466922553a3a87d",
-    "name": "Suyash Pandey",
-    "email": "suyashpandey310@gmail.com",
-    "role": "superAdmin",
-    "created_at": "2025-05-25T05:49:50.130Z",
-    "updated_at": "2025-07-07T23:08:55.948Z",
-    "__v": 0,
-    "last_login": "2025-07-07T23:08:55.947Z",
-    "last_logout": "2025-07-07T23:06:40.741Z",
-    "provider": "local"
-  }
-}
-```
-
---- -->
 
 ### 📧 Send OTP
 
@@ -343,67 +302,6 @@ _✅ Response:_
 
 ---
 
-<!-- ### 🔗 Google OAuth
-
-**GET /api/v1/auth/google** 🌐 _Public_
-
-> _Description:_ Redirects user to Google OAuth consent screen. No body required.
-
-_Query Parameters:_ role=editor (optional - used to set a cookie for signup role)
-
----
-
-### 🔗 Google OAuth Callback
-
-**GET /api/v1/auth/google/callback** 🌐 _Public_
-
-> _Description:_ Callback endpoint for Google OAuth. On success, authenticates user and redirects or responds with user info.
-
-_✅ Success Response:_
-
-```json
-{
-  "message": "Google login successful",
-  "user": {
-    "_id": "665f6e7b8c1b2a0012c3d4e5",
-    "name": "Google User",
-    "email": "googleuser@example.com",
-    "role": "user"
-  }
-}
-```
-
-_❌ On Failure:_ Redirects to ${CLIENT_URL}/login?error=google_auth_failed
-
----
-
-### 💼 LinkedIn OAuth
-
-**GET /api/v1/auth/linkedin** 🌐 _Public_
-
-> _Description:_ Redirects user to LinkedIn OAuth consent screen.
-
-_Query Parameters:_ role=editor (optional - used to set a cookie for signup role)
-
----
-
-### 💼 LinkedIn OAuth Callback -->
-
-**GET /api/v1/auth/linkedin/callback** 🌐 _Public_
-
-> _Description:_ Callback endpoint for LinkedIn OAuth. If the user already exists, they are logged in. If it's a new user and a signup_role cookie is set, the user is created.
-
-_✅ Success:_
-
-- Sets JWT token in an HttpOnly cookie
-- Redirects to ${CLIENT_URL}/
-
-_❌ Failure:_
-
-- Redirects to ${CLIENT_URL}/login?error=linkedin_auth_failed
-
----
-
 ### 🛠 Update Admin Profile
 
 **PUT /api/v1/auth/me/update** 🔒 _Requires Authentication_
@@ -435,61 +333,6 @@ _✅ Response:_
 
 ---
 
-<!-- ### 📧 Request Email Change
-
-**POST /api/v1/auth/change-email/request** 🔒 _Requires Authentication_
-
-_Request Body:_
-
-```json
-{
-  "new_email": "newadmin@example.com",
-  "current_password": "oldpassword123"
-}
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "OTP sent to new email."
-}
-```
-
----
-
-### ✅ Verify Email Change
-
-**POST /api/v1/auth/change-email/verify** 🔒 _Requires Authentication_
-
-_Request Body:_
-
-```json
-{
-  "new_email": "newadmin@example.com",
-  "otp": "123456"
-}
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "Email updated successfully.",
-  "admin": {
-    "_id": "6832af7e0466922553a3a87d",
-    "name": "Admin Name",
-    "email": "newadmin@example.com",
-    "role": "editor",
-    "provider": "local",
-    "created_at": "2025-05-25T05:49:50.130Z",
-    "updated_at": "2025-07-10T14:10:00.000Z"
-  }
-}
-```
-
---- -->
-
 ### 🔐 Change Password
 
 **PUT /api/v1/auth/change-password** 🔒 _Requires Authentication_
@@ -508,30 +351,6 @@ _✅ Response:_
 ```json
 {
   "message": "Password changed successfully."
-}
-```
-
----
-
-<!-- ### 🗑 Soft Delete Admin -->
-
-**DELETE /api/v1/auth/\:id** 🔒👑 _Requires Authentication + Role_ (superAdmin)
-
-_Params:_ id of admin (that is to be deleted by superAdmin)
-
-_Request Body:_
-
-```json
-{
-  "password": "adminpassword123"
-}
-```
-
-_✅ Response:_
-
-```json
-{
-  "message": "Admin marked for deletion. Will be permanently removed in 30 days if not reactivated."
 }
 ```
 
@@ -627,7 +446,10 @@ _Query Parameters:_
 | limit | 10 | Items per page (max: 100) |
 | content_type | optional | Filter by content type |
 | sort | updated_at:desc | Sort format: field:asc\|desc |
-| exec_role_id | optional | Filter by exec_roles |
+| exec_role_id | optional | Filter by exec_role_id |
+| theme_id | optional | Filter by theme_id |
+| sub_theme_id | optional | Filter by sub_theme_id |
+| industry_id | optional | Filter by industry_id |
 | series_id | optional | Filter content of a particular series |
 | search | optional | Search in title, slug, body, ai_summary |
 
@@ -978,20 +800,16 @@ _✅ Response:_
 
 ## 🏷 Tag Management
 
-> **All tag endpoints require authentication and superAdmin or editor role.**
-
 ### 🎯 Themes
 
-**GET /api/v1/tags/themes/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
-
-_Headers:_ Cookie with token
+**GET /api/v1/tags/themes/all** 🌐 _Public_
 
 _✅ Response:_
 
 ```json
 {
   "message": "All Theme fetched successfully",
-  "themes": [
+  "items": [
     {
       "_id": "6832c3716ef334374315ef68",
       "name": "Leadership",
@@ -1001,6 +819,21 @@ _✅ Response:_
       "__v": 0
     }
   ]
+}
+```
+
+---
+
+**GET /api/v1/tags/themes/usage/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+> _Description:_ Checks how many content documents are associated with a specific theme before deletion.
+
+_✅ Response:_
+
+```json
+{
+  "message": "Usage count fetched successfully.",
+  "count": 25
 }
 ```
 
@@ -1084,16 +917,14 @@ _✅ Response:_
 
 ### 🧩 SubThemes
 
-**GET /api/v1/tags/sub-themes/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
-
-_Headers:_ Cookie with token
+**GET /api/v1/tags/sub-themes/all** 🌐 _Public_
 
 _✅ Response:_
 
 ```json
 {
   "message": "All SubTheme fetched successfully",
-  "themes": [
+  "items": [
     {
       "_id": "6832c3716ef334374315ef68",
       "name": "Leadership",
@@ -1103,6 +934,21 @@ _✅ Response:_
       "__v": 0
     }
   ]
+}
+```
+
+---
+
+**GET /api/v1/tags/sub-themes/usage/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+> _Description:_ Checks how many content documents are associated with a specific sub-theme before deletion.
+
+_✅ Response:_
+
+```json
+{
+  "message": "Usage count fetched successfully.",
+  "count": 12
 }
 ```
 
@@ -1186,16 +1032,14 @@ _✅ Response:_
 
 ### 🏭 Industries
 
-**GET /api/v1/tags/industries/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
-
-_Headers:_ Cookie with token
+**GET /api/v1/tags/industries/all** 🌐 _Public_
 
 _✅ Response:_
 
 ```json
 {
   "message": "Industries fetched successfully",
-  "industries": [
+  "items": [
     {
       "_id": "6832c3716ef334374315ef68",
       "name": "Finance",
@@ -1205,6 +1049,21 @@ _✅ Response:_
       "__v": 0
     }
   ]
+}
+```
+
+---
+
+**GET /api/v1/tags/industries/usage/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+> _Description:_ Checks how many content documents are associated with an industry before deletion.
+
+_✅ Response:_
+
+```json
+{
+  "message": "Usage count fetched successfully.",
+  "count": 30
 }
 ```
 
@@ -1256,16 +1115,14 @@ _✅ Response:_
 
 ### 👔 Executive Roles
 
-**GET /api/v1/tags/roles/all** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
-
-_Headers:_ Cookie with token
+**GET /api/v1/tags/roles/all** 🌐 _Public_
 
 _✅ Response:_
 
 ```json
 {
   "message": "Executive roles fetched successfully",
-  "roles": [
+  "items": [
     {
       "_id": "6832c3716ef334374315ef68",
       "name": "CEO",
@@ -1275,6 +1132,23 @@ _✅ Response:_
       "__v": 0
     }
   ]
+}
+```
+
+---
+
+### 📊 Get Tag Usage Counts
+
+**GET /api/v1/tags/roles/usage/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+> _Description:_ Checks how many content documents are associated with an executive role before deletion.
+
+_✅ Response:_
+
+```json
+{
+  "message": "Usage count fetched successfully.",
+  "count": 8
 }
 ```
 
@@ -1522,6 +1396,23 @@ _✅ Response:_
   "series": {
     /* series object */
   }
+}
+```
+
+---
+
+### 📊 Get Series Usage Count
+
+**GET /api/v1/series/usage/:id** 🔒👑 _Requires Authentication + Role_ (superAdmin, editor)
+
+> _Description:_ Checks how many content documents are associated with a specific series. This is useful for showing a confirmation warning before deletion.
+
+_✅ Response:_
+
+```json
+{
+  "message": "Usage count fetched successfully.",
+  "count": 15
 }
 ```
 

@@ -10,11 +10,8 @@ import {
 
 const router = Router();
 
-// --- Public Routes ---
 router.get("/all", SeriesController.listAll);
-// Get a single series by its slug for the series page
-// heading and everything then content of series listed below it.(via /all of content controller)
-router.get("/slug/:slug", SeriesController.getBySlug);
+router.get("/slug/:slug", SeriesController.getBySlug); // Get a single series by its slug for the series page
 
 // --- Protected Admin/Editor Routes ---
 router.use(authMiddleware);
@@ -22,6 +19,8 @@ router.use(roleMiddleware(["superAdmin", "editor"]));
 
 // Get a single series by ID for editing in the admin panel
 router.get("/get/:id", SeriesController.getById);
+
+router.get("/usage/:id", SeriesController.getUsageCount);
 
 router.post(
   "/create",

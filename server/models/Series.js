@@ -68,5 +68,7 @@ seriesSchema.pre("save", async function (next) {
 
 // Indexes for faster queries
 seriesSchema.index({ title: "text", description: "text" });
+seriesSchema.index({ created_at: -1 });
+seriesSchema.index({ updated_at: -1 });
 
 export default mongoose.model("Series", seriesSchema);

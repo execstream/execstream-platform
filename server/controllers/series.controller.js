@@ -32,6 +32,11 @@ export const create = async (req, res) => {
       series,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: `Series with title '${req.body.title}' already exists.`,
+      });
+    }
     console.error("Error creating series:", error.message);
 
     if (req.uploadResults?.company_logo_url) {
@@ -59,7 +64,7 @@ export const listAll = async (req, res) => {
 
     const series = await Series.find({}).sort(sortOptions).lean();
 
-    res.json({ message: "Series fetched successfully", series });
+    res.status(200).json({ message: "Series fetched successfully", series });
   } catch (error) {
     console.error("Error fetching all series:", error);
     res.status(500).json({ message: "Failed to fetch series" });
@@ -75,7 +80,7 @@ export const getBySlug = async (req, res) => {
     if (!series) {
       return res.status(404).json({ message: "Series not found" });
     }
-    res.json({ message: "Series fetched successfully", series });
+    res.status(200).json({ message: "Series fetched successfully", series });
   } catch (error) {
     console.error("Error fetching series by slug:", error);
     res.status(500).json({ message: "Failed to fetch series" });
@@ -92,7 +97,7 @@ export const getById = async (req, res) => {
     if (!series) {
       return res.status(404).json({ message: "Series not found" });
     }
-    res.json({ message: "Series fetched successfully", series });
+    res.status(200).json({ message: "Series fetched successfully", series });
   } catch (error) {
     console.error("Error fetching series by ID:", error);
     res.status(500).json({ message: "Failed to fetch series" });
@@ -137,11 +142,16 @@ export const update = async (req, res) => {
     existingSeries.set({ ...req.body, updated_by: req.user.id });
     await existingSeries.save();
 
-    res.json({
+    res.status(200).json({
       message: "Series updated successfully",
       series: existingSeries,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: `Series with title '${req.body.title}' already exists.`,
+      });
+    }
     console.error("Error updating series:", error.message);
 
     if (req.uploadResults?.company_logo_url) {
@@ -151,6 +161,29 @@ export const update = async (req, res) => {
       );
     }
     res.status(400).json({ message: error.message || "Error updating series" });
+  }
+};
+
+// --- CHECK USAGE ---
+export const getUsageCount = async (req, res) => {
+  console.log("Getting UsageCount for series...");
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Series ID format." });
+    }
+
+    const count = await Content.countDocuments({ series_id: id });
+
+    console.log("UsageCount:", count);
+
+    res.status(200).json({
+      message: "Usage count fetched successfully.",
+      count: count,
+    });
+  } catch (error) {
+    console.error("Error fetching series usage count:", error);
+    res.status(500).json({ message: "Failed to fetch usage count" });
   }
 };
 
@@ -164,20 +197,13 @@ export const remove = async (req, res) => {
   }
 
   try {
-    //Prevent deletion if content is associated with this series
-    const associatedContentCount = await Content.countDocuments({
-      series_id: id,
-    });
-    if (associatedContentCount > 0) {
-      throw new Error(
-        `Cannot delete this series. It is associated with ${associatedContentCount} piece(s) of content.`
-      );
-    }
-
     const series = await Series.findById(id);
     if (!series) {
-      throw new Error("Series not found.");
+      return res.status(404).json({ message: "Series not found." });
     }
+
+    await Content.updateMany({ series_id: id }, { $set: { series_id: null } });
+    console.log(`Unlinked series ${id} from all associated content.`);
 
     if (series.company_logo_url) {
       await deleteFromCloudinary(series.company_logo_url, "SeriesLogo");
