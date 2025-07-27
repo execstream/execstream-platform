@@ -61,7 +61,7 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 
 | Path                   | Description                                |
 | ---------------------- | ------------------------------------------ |
-| `/api/v1/auth`         | Authentication (login, register)           |
+| `/api/v1/auth`         | Authentication (login)                     |
 | `/api/v1/content`      | Content management (CRUD, publish)         |
 | `/api/v1/newsletter`   | Newsletter subscriptions & actions         |
 | `/api/v1/tags`         | Tag management (themes, industries, roles) |
@@ -167,7 +167,8 @@ _Request Body:_
 ```json
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "password123",
+  "otp" : "123456".
 }
 ```
 
@@ -185,8 +186,7 @@ _✅ Response:_
     "updated_at": "2025-07-07T23:08:55.948Z",
     "__v": 0,
     "last_login": "2025-07-07T23:08:55.947Z",
-    "last_logout": "2025-07-07T23:06:40.741Z",
-    "provider": "local"
+    "last_logout": "2025-07-07T23:06:40.741Z"
   }
 }
 ```
@@ -295,8 +295,7 @@ _✅ Response:_
   "updated_at": "2025-07-07T23:08:55.948Z",
   "__v": 0,
   "last_login": "2025-07-07T23:08:55.947Z",
-  "last_logout": "2025-07-07T23:06:40.741Z",
-  "provider": "local"
+  "last_logout": "2025-07-07T23:06:40.741Z"
 }
 ```
 
@@ -324,7 +323,6 @@ _✅ Response:_
     "name": "Updated Name",
     "email": "admin@example.com",
     "role": "editor",
-    "provider": "local",
     "created_at": "2025-05-25T05:49:50.130Z",
     "updated_at": "2025-07-10T14:00:00.000Z"
   }
@@ -368,7 +366,6 @@ _✅ Response:_
   "name": "Admin Name",
   "email": "admin@example.com",
   "role": "editor",
-  "provider": "local",
   "created_at": "2025-05-25T05:49:50.130Z",
   "updated_at": "2025-07-10T14:00:00.000Z"
 }
@@ -421,7 +418,6 @@ _✅ Response:_
       "name": "Admin Name",
       "email": "admin@example.com",
       "role": "superAdmin",
-      "provider": "local",
       "created_at": "2025-05-25T05:49:50.130Z",
       "updated_at": "2025-07-10T14:00:00.000Z"
     }
@@ -1612,7 +1608,6 @@ Routes use middleware in this order:
 - All endpoints return _JSON_.
 - Maximum limit for pagination is _100 items per page_
 - Base64 images are _NOT_ supported for content banner uploads
-- OAuth integration available for Google and LinkedIn
 - JWT tokens are stored in HttpOnly cookies for security
 - Rate limiting may apply to prevent abuse
 
@@ -1626,7 +1621,6 @@ Routes use middleware in this order:
 - _File Upload:_ Multer direct file upload
 - _Database:_ MongoDB
 - _Image Storage:_ Cloudinary integration
-- _OAuth Providers:_ Google, LinkedIn
 
 ---
 
@@ -1635,24 +1629,11 @@ Routes use middleware in this order:
 ### Authentication Flow
 
 ```javascript
-// Register new user
+// request otp for login
 fetch("/api/v1/auth/send-otp", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email: "user@example.com" }),
-});
-
-// Register with OTP
-fetch("/api/v1/auth/register", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    name: "John Doe",
-    email: "user@example.com",
-    password: "password123",
-    otp: "123456",
-    role: "editor",
-  }),
 });
 
 // Login
@@ -1662,6 +1643,7 @@ fetch("/api/v1/auth/login", {
   body: JSON.stringify({
     email: "user@example.com",
     password: "password123",
+    otp: "123456",
   }),
 });
 ```
@@ -1705,7 +1687,6 @@ fetch("/api/v1/newsletter/subscribe", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email: "subscriber@example.com" }),
 });
-
 ```
 
 ---
