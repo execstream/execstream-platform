@@ -1700,29 +1700,12 @@ fetch("/api/v1/content/123/toggle/featured", {
 
 ```javascript
 // Add subscriber
-fetch("/api/v1/newsletter/subscribers/new", {
+fetch("/api/v1/newsletter/subscriber", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email: "subscriber@example.com" }),
 });
 
-// Create newsletter issue
-fetch("/api/v1/newsletter/issue/create", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  credentials: "include",
-  body: JSON.stringify({
-    title: "Weekly Executive Digest",
-    scheduled_for: "2025-06-10T10:00:00.000Z",
-    content_blocks: [
-      {
-        content_id: "123",
-        category: "Featured Articles",
-        link: "https://example.com/article",
-      },
-    ],
-  }),
-});
 ```
 
 ---
@@ -1750,7 +1733,6 @@ fetch("/api/v1/newsletter/issue/create", {
 - **Password Hashing** with bcrypt
 - **Input Validation** and sanitization
 - **CORS Protection** configured
-- **OAuth Integration** for secure third-party login
 
 ---
 
@@ -1811,5 +1793,5 @@ fetch("/api/v1/newsletter/issue/create", {
 For API support and documentation updates, please contact [Suyash Pandey](mailto:suyash@exec-stream.com).
 
 **API Version:** v1  
-**Last Updated:** July 25, 2025  
+**Last Updated:** July 27, 2025  
 **Documentation Status:** ✅ Complete
