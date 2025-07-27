@@ -1700,7 +1700,7 @@ fetch("/api/v1/content/123/toggle/featured", {
 
 ```javascript
 // Add subscriber
-fetch("/api/v1/newsletter/subscriber", {
+fetch("/api/v1/newsletter/subscribe", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ email: "subscriber@example.com" }),
