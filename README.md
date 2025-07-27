@@ -89,9 +89,9 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - GET /api/v1/tags/roles/all
 - GET /api/v1/series/all
 - GET /api/v1/series/slug/:slug
-- GET /api/v1/webconfig/event-banners/all
-- GET /api/v1/webconfig/experts/all
-- GET /api/v1/webconfig/partners/all
+- GET /api/v1/web-configs/event-banners/all
+- GET /api/v1/web-configs/experts/all
+- GET /api/v1/web-configs/partners/all
 
 ### Authentication Required
 
@@ -140,19 +140,19 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - DELETE /api/v1/series/delete/:id
 - GET /api/v1/series/get/:id
 - GET /api/v1/series/usage/:id
-- POST /api/v1/webconfig/event-banners/new
-- GET /api/v1/webconfig/event-banners/all-admin
-- PATCH /api/v1/webconfig/event-banners/toggle-active/:id
-- DELETE /api/v1/webconfig/event-banners/delete/:id
-- POST /api/v1/webconfig/experts/new
-- PATCH /api/v1/webconfig/experts/update/:id
-- GET /api/v1/webconfig/experts/all-admin
-- PATCH /api/v1/webconfig/experts/toggle-active/:id
-- DELETE /api/v1/webconfig/experts/delete/:id
-- POST /api/v1/webconfig/partners/new
-- GET /api/v1/webconfig/partners/all-admin
-- PATCH /api/v1/webconfig/partners/toggle-active/:id
-- DELETE /api/v1/webconfig/partners/delete/:id
+- POST /api/v1/web-configs/event-banners/new
+- GET /api/v1/web-configs/event-banners/all-admin
+- PATCH /api/v1/web-configs/event-banners/toggle-active/:id
+- DELETE /api/v1/web-configs/event-banners/delete/:id
+- POST /api/v1/web-configs/experts/new
+- PATCH /api/v1/web-configs/experts/update/:id
+- GET /api/v1/web-configs/experts/all-admin
+- PATCH /api/v1/web-configs/experts/toggle-active/:id
+- DELETE /api/v1/web-configs/experts/delete/:id
+- POST /api/v1/web-configs/partners/new
+- GET /api/v1/web-configs/partners/all-admin
+- PATCH /api/v1/web-configs/partners/toggle-active/:id
+- DELETE /api/v1/web-configs/partners/delete/:id
 
 ---
 
@@ -1463,7 +1463,7 @@ _Request Body:_ Same fields as create (excluding slug and created_by)
 
 #### 🖼 Event Banners
 
-**GET /api/v1/webconfig/event-banners/all** 🌐 _Public_
+**GET /api/v1/web-configs/event-banners/all** 🌐 _Public_
 
 ```json
 {
@@ -1478,11 +1478,11 @@ _Request Body:_ Same fields as create (excluding slug and created_by)
 
 #### 👨‍💼 Experts
 
-**GET /api/v1/webconfig/experts/all** 🌐 _Public_
+**GET /api/v1/web-configs/experts/all** 🌐 _Public_
 
 #### 🤝 Partners
 
-**GET /api/v1/webconfig/partners/all** 🌐 _Public_
+**GET /api/v1/web-configs/partners/all** 🌐 _Public_
 
 ---
 
