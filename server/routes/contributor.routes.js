@@ -11,10 +11,11 @@ import {
 
 const router = express.Router();
 
+router.get("/all", ContributorController.getAll);
+
 router.use(authMiddleware);
 router.use(roleMiddleware(["superAdmin", "editor"]));
 
-router.get("/all", ContributorController.getAll);
 router.get("/:id", ContributorController.getById);
 router.delete("/delete/:id", ContributorController.remove);
 

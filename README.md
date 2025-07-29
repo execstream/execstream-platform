@@ -82,6 +82,7 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - GET /api/v1/content/all (optional auth)
 - GET /api/v1/content/slug/:slug
 - GET /api/v1/content/flags/all
+- GET /api/v1/contributors/all
 - POST /api/v1/newsletter/subscribe
 - GET /api/v1/tags/themes/all
 - GET /api/v1/tags/sub-themes/all
@@ -130,7 +131,6 @@ Server will be running on [http://localhost:5000](http://localhost:5000) by defa
 - POST /api/v1/tags/roles/new
 - PUT /api/v1/tags/roles/update/:id
 - DELETE /api/v1/tags/roles/delete/:id
-- GET /api/v1/contributors/all
 - GET /api/v1/contributors/:id
 - POST /api/v1/contributors/new
 - PATCH /api/v1/contributors/update/:id
@@ -1200,7 +1200,7 @@ _✅ Response:_
 
 ### 📋 Get All Contributors
 
-**GET /api/v1/contributors/all** 🔒👑 _Requires Authentication + Role_
+**GET /api/v1/contributors/all** 🌐 _Public_
 
 _✅ Response:_
 

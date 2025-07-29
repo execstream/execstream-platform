@@ -13,15 +13,13 @@ export const getAll = async (req, res) => {
   console.log("Fetching all contributors");
   try {
     const contributors = await Contributor.find({})
+      .select("-created_by")
       .sort({ created_at: -1 })
       .lean();
 
-    const total_contributors = contributors.length;
-
-    console.log(`Found ${total_contributors} contributors`);
+    console.log(`Found ${contributors.length} contributors`);
     res.json({
       message: "Contributors fetched successfully",
-      total_contributors,
       contributors,
     });
   } catch (err) {
