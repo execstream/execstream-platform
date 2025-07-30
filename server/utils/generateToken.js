@@ -6,7 +6,7 @@ export const generateToken = async (admin, res) => {
     { id: admin._id, role: admin.role },
     config.JWT_SECRET,
     {
-      expiresIn: "7d",
+      expiresIn: "1d",
     }
   );
 
