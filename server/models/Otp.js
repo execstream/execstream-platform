@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 
 const otpSchema = new mongoose.Schema(
   {
@@ -18,12 +17,5 @@ const otpSchema = new mongoose.Schema(
     },
   }
 );
-
-otpSchema.pre("save", async function (next) {
-  if (!this.isModified("code")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.code = await bcrypt.hash(this.code, salt);
-  next();
-});
 
 export default mongoose.model("Otp", otpSchema);

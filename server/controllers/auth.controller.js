@@ -5,7 +5,7 @@ import ejs from "ejs";
 import path from "path";
 import { fileURLToPath } from "url";
 import Otp from "../models/Otp.js";
-import { sendEmail } from "../configs/sendgrid.js";
+import { sendEmail } from "../configs/email.service.js";
 import { generateToken } from "../utils/generateToken.js";
 import { validateEmail, validateStrongPassword } from "../utils/validators.js";
 import { config } from "../configs/env.js";
