@@ -42,8 +42,13 @@ export const addBanner = async (req, res) => {
       .json({ message: "Banner added successfully", banner: newBanner });
   } catch (err) {
     console.error("Error adding banner:", err);
-    await deleteFromCloudinary(imageUrl, "Failed Banner Upload");
-    res.status(500).json({ message: "Error adding banner" });
+    if (req.uploadResults?.event_banner_image_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.event_banner_image_url,
+        "Failed Banner Upload"
+      );
+    }
+    res.status(500).json({ message: err.message || "Error adding banner" });
   }
 };
 
@@ -51,13 +56,11 @@ export const addExpert = async (req, res) => {
   const { name, job_position, company_name, is_active, order } = req.body;
   const profileImageUrl = req.uploadResults?.expert_profile_image_url;
 
-  if (!name || !profileImageUrl) {
-    return res
-      .status(400)
-      .json({ message: "Name and profile image are required." });
-  }
-
   try {
+    if (!name || !profileImageUrl) {
+      throw new Error("Name and profile image are required.");
+    }
+
     const newExpert = new HomeExpert({
       name,
       expert_profile_image_url: profileImageUrl,
@@ -72,8 +75,13 @@ export const addExpert = async (req, res) => {
       .json({ message: "Expert added successfully", expert: newExpert });
   } catch (err) {
     console.error("Error adding expert:", err);
-    await deleteFromCloudinary(profileImageUrl, "Failed Expert Upload");
-    res.status(500).json({ message: "Error adding expert" });
+    if (req.uploadResults?.expert_profile_image_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.expert_profile_image_url,
+        "Failed Expert Update"
+      );
+    }
+    res.status(500).json({ message: err.message || "Error adding expert" });
   }
 };
 
@@ -81,7 +89,7 @@ export const updateExpert = async (req, res) => {
   try {
     const expert = await HomeExpert.findById(req.params.id);
     if (!expert) {
-      return res.status(404).json({ message: "Expert not found" });
+      throw new Error("Expert not found.");
     }
 
     const oldImageUrl = expert.expert_profile_image_url;
@@ -117,7 +125,7 @@ export const updateExpert = async (req, res) => {
         "Failed Expert Update"
       );
     }
-    res.status(500).json({ message: "Error updating expert" });
+    res.status(500).json({ message: err.message || "Error updating expert" });
   }
 };
 
@@ -143,8 +151,13 @@ export const addPartner = async (req, res) => {
       .json({ message: "Partner added successfully", partner: newPartner });
   } catch (err) {
     console.error("Error adding partner:", err);
-    await deleteFromCloudinary(logoUrl, "Failed Partner Upload");
-    res.status(500).json({ message: "Error adding partner" });
+    if (req.uploadResults?.partner_company_logo_image_url) {
+      await deleteFromCloudinary(
+        req.uploadResults.partner_company_logo_image_url,
+        "Failed Partner Upload"
+      );
+    }
+    res.status(500).json({ message: err.message || "Error adding partner" });
   }
 };
 

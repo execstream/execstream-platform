@@ -67,6 +67,14 @@ export const login = async (req, res) => {
         .json({ message: "OTP has expired. Please request a new one." });
     }
 
+    const isMatch = otp.toString() === otpRecord.code;
+    if (!isMatch) {
+      console.log("OTP did not match.");
+      return res
+        .status(400)
+        .json({ message: "Invalid OTP. Please try again." });
+    }
+
     const valid = await bcrypt.compare(password, admin.password);
     if (!valid) {
       console.error("[LoginError] Credential mismatch", {
@@ -331,12 +339,11 @@ export const sendOtp = async (req, res) => {
   try {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
-    const hashedCode = await bcrypt.hash(code, 10);
 
     await Otp.deleteMany({ email: emailNormalized });
     await new Otp({
       email: emailNormalized,
-      code: hashedCode,
+      code,
       expiresAt,
     }).save();
     await sendEmail({
