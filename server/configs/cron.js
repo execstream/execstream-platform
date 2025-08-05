@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import Content from "../models/Content.js";
+import { clearCacheByPrefix } from "../helpers/cache.helpers.js";
 
 const publishScheduledContent = async () => {
   console.log(
@@ -28,9 +29,15 @@ const publishScheduledContent = async () => {
       { $set: { status: "published", publish_date: now } }
     );
 
-    console.log(
-      `📢 Successfully published ${result.modifiedCount} content(s).`
-    );
+    if (result.modifiedCount > 0) {
+      console.log(
+        `📢 Successfully published ${result.modifiedCount} content(s).`
+      );
+      console.log(
+        "♻️ Clearing content caches due to newly published content..."
+      );
+      await clearCacheByPrefix("/api/v1/content");
+    }
   } catch (error) {
     console.error("Error running the publish scheduler:", error);
   }

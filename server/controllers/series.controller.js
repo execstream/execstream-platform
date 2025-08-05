@@ -5,6 +5,7 @@ import {
   deleteFromCloudinary,
   cleanupOldImages,
 } from "../helpers/cloudinary.helpers.js";
+import { clearCacheByPrefix } from '../helpers/cache.helpers.js';
 
 // --- CREATE ---
 export const create = async (req, res) => {
@@ -26,6 +27,9 @@ export const create = async (req, res) => {
     });
 
     await series.save();
+
+    await clearCacheByPrefix('/api/v1/series');
+
     console.log("Series created successfully:", series._id);
     res.status(201).json({
       message: "Series created successfully",
@@ -142,6 +146,8 @@ export const update = async (req, res) => {
     existingSeries.set({ ...req.body, updated_by: req.user.id });
     await existingSeries.save();
 
+    await clearCacheByPrefix('/api/v1/series');
+
     res.status(200).json({
       message: "Series updated successfully",
       series: existingSeries,
@@ -210,6 +216,8 @@ export const remove = async (req, res) => {
     }
 
     await Series.deleteOne({ _id: id });
+
+    await clearCacheByPrefix('/api/v1/series');
 
     res.status(200).json({ message: "Series deleted successfully" });
   } catch (error) {

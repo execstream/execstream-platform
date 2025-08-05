@@ -7,13 +7,14 @@ import {
 } from "../controllers/tag.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import roleMiddleware from "../middlewares/role.middleware.js";
+import { cacheMiddleware } from "../middlewares/cache.middleware.js";
 
 const router = Router();
 
-router.get("/themes/all", ThemeController.listAll);
-router.get("/industries/all", IndustryController.listAll);
-router.get("/roles/all", ExecRoleController.listAll);
-router.get("/sub-themes/all", SubThemeController.listAll);
+router.get("/themes/all", cacheMiddleware() ,ThemeController.listAll);
+router.get("/industries/all", cacheMiddleware(),IndustryController.listAll);
+router.get("/roles/all", cacheMiddleware(),ExecRoleController.listAll);
+router.get("/sub-themes/all", cacheMiddleware(),SubThemeController.listAll);
 
 router.use(authMiddleware);
 router.use(roleMiddleware(["superAdmin", "editor"]));

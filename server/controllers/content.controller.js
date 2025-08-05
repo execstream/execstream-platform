@@ -12,6 +12,10 @@ import {
   validateSortField,
   validateSortOrder,
 } from "../utils/validators.js";
+import {
+  clearCacheByKey,
+  clearCacheByPrefix,
+} from "../helpers/cache.helpers.js";
 
 export const listAll = async (req, res) => {
   console.log("Fetching paginated content list");
@@ -156,7 +160,7 @@ export const getBySlug = async (req, res) => {
     if (!content) return res.status(404).json({ message: "Content not found" });
 
     console.log("Content fetched successfully by slug");
-    res.json({ message: "Content fetched successfully", content });
+    res.status(200).json({ message: "Content fetched successfully", content });
   } catch (err) {
     console.error("Error in getBySlug:", err);
     res.status(500).json({ message: "Failed to fetch content" });
@@ -171,7 +175,7 @@ export const getById = async (req, res) => {
     if (!content) return res.status(404).json({ message: "Content not found" });
 
     console.log("Content fetched successfully");
-    res.json({ message: "Content fetched successfully", content });
+    res.status(200).json({ message: "Content fetched successfully", content });
   } catch (err) {
     console.error("Error in getById:", err);
     res.status(500).json({ message: "Failed to fetch content" });
@@ -226,6 +230,7 @@ export const createContent = async (req, res) => {
     });
 
     await content.save();
+    await clearCacheByPrefix("/api/v1/content");
     console.log("Content created successfully:", content._id);
     res.status(201).json({
       message: "Content created successfully",
@@ -317,8 +322,11 @@ export const updateContent = async (req, res) => {
 
     await content.save();
 
+    await clearCacheByKey(`/api/v1/content/slug/${content.slug}`);
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log("Content updated successfully:", content._id);
-    res.json({
+    res.status(200).json({
       message: "Content updated successfully",
       content,
     });
@@ -378,6 +386,10 @@ export const removeContent = async (req, res) => {
     }
 
     await content.deleteOne();
+
+    await clearCacheByKey(`/api/v1/content/slug/${content.slug}`);
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log("Content deleted successfully:", req.params.id);
     res.status(200).json({ message: "Content deleted successfully" });
   } catch (err) {
@@ -413,8 +425,12 @@ export const publishContent = async (req, res) => {
     content.updated_by = req.user.id;
 
     await content.save();
+
+    await clearCacheByKey(`/api/v1/content/slug/${content.slug}`);
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log("Content published successfully:", content._id);
-    res.json({
+    res.status(200).json({
       message: "Content published successfully",
       content: {
         id: content._id,
@@ -521,9 +537,14 @@ export const patchContributorInContent = async (req, res) => {
 
     await content.save();
 
+    await clearCacheByKey(`/api/v1/content/slug/${content.slug}`);
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log("Contributor updated successfully");
 
-    res.json({ message: "Contributor updated in content", contributor });
+    res
+      .status(200)
+      .json({ message: "Contributor updated in content", contributor });
   } catch (err) {
     console.error("Error updating content contributor:", err);
 
@@ -598,9 +619,12 @@ export const deleteContributorFromContent = async (req, res) => {
 
     await content.save();
 
+    await clearCacheByKey(`/api/v1/content/slug/${content.slug}`);
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log("Contributor deleted from content successfully");
 
-    res.json({ message: "Contributor removed from content" });
+    res.status(200).json({ message: "Contributor removed from content" });
   } catch (err) {
     console.error("Error removing contributor from content:", err);
     res.status(500).json({ message: "Server error" });
@@ -673,9 +697,12 @@ export const addContributorToContent = async (req, res) => {
 
     await content.save();
 
+    await clearCacheByKey(`/api/v1/content/slug/${content.slug}`);
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log("Contributor added to content:", contributorSnapshot);
 
-    res.json({
+    res.status(201).json({
       message: "Contributor added to content",
       contributor: contributorSnapshot,
     });
@@ -688,15 +715,19 @@ export const addContributorToContent = async (req, res) => {
 export const getFlaggedContent = async (req, res) => {
   console.log("Fetching flagged content (featured, popular, hero)");
   try {
+    const fieldsToSelect =
+      "title slug content_type banner_image_url theme_ids sub_theme_ids exec_role_ids industry_ids meta_description meta_keywords featured popular hero publish_date";
+
     const contents = await Content.find({
       $or: [{ featured: true }, { popular: true }, { hero: true }],
       status: "published",
     })
+      .select(fieldsToSelect)
       .sort({ updated_at: -1 })
       .lean();
 
     console.log(`Found ${contents.length} flagged contents`);
-    res.json({
+    res.status(200).json({
       message: "Flagged content fetched successfully",
       contents,
     });
@@ -725,6 +756,8 @@ export const toggleFlag = async (req, res) => {
     content.updated_by = req.user.id;
     await content.save();
 
+    await clearCacheByPrefix("/api/v1/content");
+
     console.log(
       `Toggled ${flag} for content ID:`,
       id,
@@ -732,7 +765,7 @@ export const toggleFlag = async (req, res) => {
       content[flag]
     );
 
-    res.json({
+    res.status(200).json({
       message: `Toggled ${flag} for content id: ${content._id}`,
       [flag]: content[flag],
     });

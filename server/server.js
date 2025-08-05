@@ -16,6 +16,7 @@ import contributorRoutes from "./routes/contributor.routes.js";
 import { globalIpRateLimiter } from "./utils/rateLimiters.js";
 import { config, getConfigStatus } from "./configs/env.js";
 import { startScheduler } from "./configs/cron.js";
+import redisClient from "./configs/redis.js";
 
 const app = express();
 
@@ -47,13 +48,24 @@ app.get("/", (req, res) => {
   res.send("Welcome to the API");
 });
 
-app.get("/health", (req, res) => {
+app.get("/health", async (req, res) => {
   const configStatus = getConfigStatus();
+  let redisStatus = "disconnected";
+  try {
+    if ((await redisClient.ping()) === "PONG") {
+      redisStatus = "ok";
+    }
+  } catch (e) {
+    redisStatus = "error";
+  }
   res.status(200).json({
     status: "ok",
     message: "API is running",
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
+    dependencies: {
+      redis: redisStatus,
+    },
     configStatus,
   });
 });
@@ -113,6 +125,9 @@ const gracefulShutdown = async (signal) => {
     await disconnectDB();
     console.log("✅ Database disconnected successfully");
 
+    await redisClient.quit();
+    console.log("✅ Redis disconnected successfully");
+
     clearTimeout(shutdownTimeout);
     console.log("✅ Graceful shutdown completed");
     process.exit(0);
@@ -142,17 +157,21 @@ async function startServer() {
 
     console.log("📡 Connecting to database...");
     await connectDB();
+
+    console.log("⚡ Connecting to Redis...");
+    await redisClient.connect();
+    console.log("✅ Redis connected successfully");
+
     startScheduler();
     server = app.listen(config.PORT, () => {
       console.log(`🌟 Server running on port ${config.PORT}`);
       console.log(`🔗 Environment: ${config.NODE_ENV}`);
-      console.log(
-        `🏥 Health check: http://localhost:${config.PORT}${config.HEALTH_CHECK_PATH}`
-      );
-
       if (config.IS_DEVELOPMENT) {
         console.log(`🎯 API Base URL: http://localhost:${config.PORT}`);
       }
+      console.log(
+        `🏥 Health check: http://localhost:${config.PORT}${config.HEALTH_CHECK_PATH}`
+      );
     });
 
     server.on("error", (err) => {

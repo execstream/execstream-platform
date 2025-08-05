@@ -45,7 +45,7 @@ export const disconnectDB = async () => {
 
     console.log("🔌 Disconnecting mongoose...");
     await mongoose.disconnect();
-    console.log("🛑 MongoDB connection closed successfully.");
+    console.log("✅ MongoDB connection closed successfully.");
   } catch (error) {
     console.error("❌ Error during DB disconnect:", error);
     throw error;

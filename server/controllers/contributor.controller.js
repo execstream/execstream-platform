@@ -8,6 +8,7 @@ import {
   validateRequiredString,
   validateURL,
 } from "../utils/validators.js";
+import { clearCacheByPrefix } from "../helpers/cache.helpers.js";
 
 export const getAll = async (req, res) => {
   console.log("Fetching all contributors");
@@ -18,7 +19,7 @@ export const getAll = async (req, res) => {
       .lean();
 
     console.log(`Found ${contributors.length} contributors`);
-    res.json({
+    res.status(200).json({
       message: "Contributors fetched successfully",
       contributors,
     });
@@ -38,7 +39,7 @@ export const getById = async (req, res) => {
     }
 
     console.log("Contributor fetched successfully");
-    res.json({
+    res.status(200).json({
       message: "Contributor fetched successfully",
       contributor,
     });
@@ -92,7 +93,11 @@ export const create = async (req, res) => {
       ...data,
       created_by: req.user.id,
     });
+
     await contributor.save();
+
+    await clearCacheByPrefix("/api/v1/contributors/all");
+
     console.log("Created new contributor: ", contributor._id);
     res.status(201).json({ message: "Contributor created", contributor });
   } catch (err) {
@@ -183,8 +188,10 @@ export const update = async (req, res) => {
       runValidators: true,
     });
 
+    await clearCacheByPrefix("/api/v1/contributors/all");
+
     console.log("Updated contributor:", updated);
-    res.json({ message: "Contributor updated", updated });
+    res.status(200).json({ message: "Contributor updated", updated });
   } catch (err) {
     console.error("Error updating contributor:", err);
 
@@ -230,8 +237,10 @@ export const remove = async (req, res) => {
       );
     }
 
+    await clearCacheByPrefix("/api/v1/contributors/all");
+
     console.log("Deleted contributor");
-    res.json({ message: "Contributor removed successfully" });
+    res.status(200).json({ message: "Contributor removed successfully" });
   } catch (err) {
     console.error("Error deleting contributor:", err);
     res.status(500).json({ message: "Error deleting contributor" });

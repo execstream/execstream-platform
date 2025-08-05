@@ -7,11 +7,12 @@ import {
   handleUploadError,
   processSeriesUploads,
 } from "../helpers/cloudinary.helpers.js";
+import { cacheMiddleware } from "../middlewares/cache.middleware.js";
 
 const router = Router();
 
-router.get("/all", SeriesController.listAll);
-router.get("/slug/:slug", SeriesController.getBySlug); // Get a single series by its slug for the series page
+router.get("/all", cacheMiddleware() ,SeriesController.listAll);
+router.get("/slug/:slug", cacheMiddleware() ,SeriesController.getBySlug); // Get a single series by its slug for the series page
 
 // --- Protected Admin/Editor Routes ---
 router.use(authMiddleware);

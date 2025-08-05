@@ -8,13 +8,18 @@ import {
   processWebConfigUploads,
   uploadWebConfigFiles,
 } from "../helpers/cloudinary.helpers.js";
+import { cacheMiddleware } from "../middlewares/cache.middleware.js";
 
 const router = express.Router();
 
 // Public
-router.get("/event-banners/all", WebConfigController.getBanners);
-router.get("/experts/all", WebConfigController.getExperts);
-router.get("/partners/all", WebConfigController.getPartners);
+router.get(
+  "/event-banners/all",
+  cacheMiddleware(),
+  WebConfigController.getBanners
+);
+router.get("/experts/all", cacheMiddleware(), WebConfigController.getExperts);
+router.get("/partners/all", cacheMiddleware(), WebConfigController.getPartners);
 
 // Admin only
 router.use(authMiddleware);

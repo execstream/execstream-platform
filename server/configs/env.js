@@ -22,6 +22,7 @@ const REQUIRED_ENV_VARS = [
 const OPTIONAL_ENV_VARS = [
   "LOG_LEVEL",
   "REDIS_URL",
+  "REDIS_CACHE_TTL",
   "RATE_LIMIT_WINDOW_MS",
   "RATE_LIMIT_MAX_REQUESTS",
   "HEALTH_CHECK_PATH",
@@ -342,6 +343,7 @@ export const config = {
   // Database
   MONGODB_URI: process.env.MONGODB_URI,
   REDIS_URL: process.env.REDIS_URL,
+  REDIS_CACHE_TTL: process.env.REDIS_CACHE_TTL,
 
   // Security
   JWT_SECRET: process.env.JWT_SECRET,

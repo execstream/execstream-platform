@@ -2,13 +2,20 @@ import EventBanner from "../models/EventBanner.js";
 import HomeExpert from "../models/HomeExpert.js";
 import PartnerCompany from "../models/PartnerCompany.js";
 import { deleteFromCloudinary } from "../helpers/cloudinary.helpers.js";
+import { clearCacheByPrefix } from '../helpers/cache.helpers.js';
+
+const resourceCachePrefixMap = {
+  banner: '/api/v1/web-configs/event-banners',
+  expert: '/api/v1/web-configs/experts',
+  partner: '/api/v1/web-configs/partners',
+};
 
 const getActiveItemsFactory = (Model, resourceName) => async (req, res) => {
   try {
     const items = await Model.find({ is_active: true })
       .sort({ order: "asc" })
       .lean();
-    res.json({
+    res.status(200).json({
       message: `${
         resourceName.charAt(0).toUpperCase() + resourceName.slice(1)
       } fetched successfully`,
@@ -37,6 +44,9 @@ export const addBanner = async (req, res) => {
       order,
     });
     await newBanner.save();
+
+    await clearCacheByPrefix(resourceCachePrefixMap.banner);
+
     res
       .status(201)
       .json({ message: "Banner added successfully", banner: newBanner });
@@ -70,6 +80,9 @@ export const addExpert = async (req, res) => {
       order,
     });
     await newExpert.save();
+
+    await clearCacheByPrefix(resourceCachePrefixMap.expert);
+
     res
       .status(201)
       .json({ message: "Expert added successfully", expert: newExpert });
@@ -113,7 +126,9 @@ export const updateExpert = async (req, res) => {
       await deleteFromCloudinary(oldImageUrl, "Old Expert Profile Image");
     }
 
-    res.json({
+    await clearCacheByPrefix(resourceCachePrefixMap.expert);
+
+    res.status(200).json({
       message: "Expert updated successfully",
       expert: updatedExpert,
     });
@@ -146,6 +161,9 @@ export const addPartner = async (req, res) => {
       is_active,
     });
     await newPartner.save();
+
+    await clearCacheByPrefix(resourceCachePrefixMap.partner);
+
     res
       .status(201)
       .json({ message: "Partner added successfully", partner: newPartner });
@@ -177,7 +195,9 @@ const deleteItemFactory =
         await deleteFromCloudinary(item[imageUrlField], resourceName);
       }
 
-      res.json({
+      await clearCacheByPrefix(resourceCachePrefixMap[resourceName]);
+
+      res.status(200).json({
         message: `${
           resourceName.charAt(0).toUpperCase() + resourceName.slice(1)
         } deleted successfully`,
@@ -193,7 +213,7 @@ const getAllForAdminFactory = (Model, resourceName) => async (req, res) => {
     const items = await Model.find({})
       .sort({ is_active: -1, order: "asc" })
       .lean();
-    res.json({
+    res.status(200).json({
       message: `All ${resourceName} fetched successfully for admin`,
       [`total_${resourceName}`]: items.length,
       [resourceName]: items,
@@ -216,7 +236,10 @@ const toggleStatusFactory = (Model, resourceName) => async (req, res) => {
     }
     item.is_active = !item.is_active;
     await item.save();
-    res.json({
+
+    await clearCacheByPrefix(resourceCachePrefixMap[resourceName]);
+
+    res.status(200).json({
       message: `${
         resourceName.charAt(0).toUpperCase() + resourceName.slice(1)
       } status toggled to ${item.is_active ? "active" : "inactive"}`,

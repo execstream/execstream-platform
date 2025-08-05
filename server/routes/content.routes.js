@@ -3,6 +3,7 @@ import * as ContentController from "../controllers/content.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import authOptionalMiddleware from "../middlewares/authOptional.middleware.js";
 import roleMiddleware from "../middlewares/role.middleware.js";
+import { cacheMiddleware } from "../middlewares/cache.middleware.js";
 import {
   handleUploadError,
   parseData,
@@ -12,9 +13,18 @@ import {
 
 const router = Router();
 
-router.get("/all", authOptionalMiddleware, ContentController.listAll);
-router.get("/flags/all", ContentController.getFlaggedContent); //featured, popular, hero section
-router.get("/slug/:slug", ContentController.getBySlug);
+router.get(
+  "/all",
+  authOptionalMiddleware,
+  cacheMiddleware(),
+  ContentController.listAll
+);
+router.get(
+  "/flags/all",
+  cacheMiddleware(),
+  ContentController.getFlaggedContent
+); //featured, popular, hero section
+router.get("/slug/:slug", cacheMiddleware(), ContentController.getBySlug);
 
 router.use(authMiddleware);
 router.use(roleMiddleware(["superAdmin", "editor"]));
@@ -35,8 +45,8 @@ router.post(
 
 router.patch(
   "/update/:id",
-  uploadContentFiles, 
-  handleUploadError, 
+  uploadContentFiles,
+  handleUploadError,
   processContentUploads,
   parseData,
   ContentController.updateContent

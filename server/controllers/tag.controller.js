@@ -4,6 +4,14 @@ import ExecutiveRole from "../models/ExecutiveRole.js";
 import SubTheme from "../models/SubTheme.js";
 import mongoose from "mongoose";
 import Content from "../models/Content.js";
+import { clearCacheByPrefix } from "../helpers/cache.helpers.js";
+
+const tagRoutePrefixMap = {
+  Theme: "/api/v1/tags/themes/all",
+  SubTheme: "/api/v1/tags/sub-themes/all",
+  Industry: "/api/v1/tags/industries/all",
+  "Executive Role": "/api/v1/tags/roles/all",
+};
 
 const createTagController = (Model, tagType) => ({
   listAll: async (req, res) => {
@@ -31,6 +39,8 @@ const createTagController = (Model, tagType) => ({
 
       const item = new Model(req.body);
       await item.save();
+
+      await clearCacheByPrefix(tagRoutePrefixMap[tagType]);
 
       res.status(201).json({
         message: `New ${tagType} '${item.name}' created successfully.`,
@@ -65,6 +75,9 @@ const createTagController = (Model, tagType) => ({
         console.error(`Error: ${tagType} with ID: ${req.params.id} not found`);
         return res.status(404).json({ message: `${tagType} not found` });
       }
+
+      await clearCacheByPrefix(tagRoutePrefixMap[tagType]);
+
       res.status(200).json({
         message: `${tagType} updated successfully`,
         item,
@@ -144,6 +157,9 @@ const createTagController = (Model, tagType) => ({
       if (!deletedTag) {
         return res.status(404).json({ message: `${tagType} not found.` });
       }
+
+      await clearCacheByPrefix(tagRoutePrefixMap[tagType]);
+
       console.log(`${tagType} with ID: ${tagId} deleted successfully`);
       res.status(200).json({ message: `${tagType} deleted successfully.` });
     } catch (err) {
