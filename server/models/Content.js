@@ -25,6 +25,8 @@ const contentSchema = new mongoose.Schema(
     },
     media_url: { type: String },
     pdf_url: { type: String },
+    banner_credit_url: { type: String },
+    banner_credit_name: { type: String },
     media_duration_sec: { type: Number },
     banner_image_url: { type: String },
     meta_description: { type: String },

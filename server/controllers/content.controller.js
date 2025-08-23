@@ -96,6 +96,8 @@ export const listAll = async (req, res) => {
   content_type 
   series_id, 
   banner_image_url 
+  banner_credit_url 
+  banner_credit_name 
   ai_summary 
   meta_description 
   meta_keywords 
