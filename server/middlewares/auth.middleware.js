@@ -4,7 +4,6 @@ import { config } from "../configs/env.js";
 
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
-  console.log("Token:", token);
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   try {

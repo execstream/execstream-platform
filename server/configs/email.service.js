@@ -25,7 +25,7 @@ export const sendEmail = async ({ to, subject, html }) => {
   try {
     const response = await transactionalApi.sendTransacEmail(msg);
 
-    console.log(`Brevo email sent to ${to}`, {
+    console.log(`Brevo email sent:`, {
       messageId: response?.body?.messageId || null,
     });
   } catch (err) {

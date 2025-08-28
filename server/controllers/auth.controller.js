@@ -21,7 +21,7 @@ const sanitizeAdmin = (adminDoc) => {
 };
 
 export const login = async (req, res) => {
-  console.log("Login attempt:", req.body);
+  console.log("Login attempt:", req.body.email);
   if (!req.body.email || !req.body.password || !req.body.otp) {
     return res
       .status(400)
@@ -105,7 +105,7 @@ export const login = async (req, res) => {
 };
 
 export const myProfile = async (req, res) => {
-  console.log("Fetching profile for user ID:", req.user.id);
+  console.log("Fetching profile for user ID.");
   try {
     const admin = await Admin.findOne({
       _id: req.user.id,
@@ -121,7 +121,7 @@ export const myProfile = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
-    console.log("Admin profile fetched successfully: ", admin);
+    console.log("Admin profile fetched successfully.");
     res.json({ message: "Admin profile fetched successfully", admin });
   } catch (err) {
     console.error("Profile fetch error:", err);
@@ -319,7 +319,6 @@ export const changePassword = async (req, res) => {
 };
 
 export const checkUser = (req, res) => {
-  console.log("Checking user:", req.user);
   try {
     res.status(200).json(req.user);
   } catch (e) {
